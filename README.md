@@ -37,19 +37,19 @@ import push from '@candlefinance/push';
 const isGranted = await push.requestPermissions();
 
 // Get the APNS token w/o showing permission, useful if you want silent push notifications
-await registerForToken();
+await push.registerForToken();
 
 // Check permission status: 'granted', 'denied', or 'notDetermined'
-const status = await getAuthorizationStatus();
+const status = await push.getAuthorizationStatus();
 
-// listeners
+// Listeners
 push.addListener('notificationReceived', (data) => {
   console.log('notificationReceived', data);
   const uuid = data.uuid;
   const kind = data.kind; // foreground, background, or opened
   const payload = data.payload;
   if (uuid) {
-    // Required push notification to tell iOS that the push was received, if not called, we will call this in 30 seconds
+    // Required to tell iOS that the push was received, if not called, the library will call this in 30 seconds
     await push.onFinish(uuid);
   }
 });
@@ -72,3 +72,11 @@ return () => {
 ## Contributing
 
 We are open to contributions. Please read our [Contributing Guide](CONTRIBUTING.md) for more information.
+
+## License
+
+This project is licensed under the terms of the [MIT license](LICENSE).
+
+## Discord
+
+Post in #oss channel in our [Discord](https://discord.gg/Qm7ZPUhBWV) if you have any questions or want to contribute.
