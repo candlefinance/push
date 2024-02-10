@@ -10,8 +10,9 @@
 </div>
 
 <br/>
-
-<img src="https://github.com/candlefinance/haptics/assets/12258850/86470cfc-fe84-4159-adcd-dbb659778619.png" alt="Candle Finance" width="200" align="center"/>
+<div align="center">
+    <img src="https://github.com/candlefinance/haptics/assets/12258850/86470cfc-fe84-4159-adcd-dbb659778619.png" alt="bell" width="200"/>
+</div>
 
 <h1 align="center">
  Push for iOS
