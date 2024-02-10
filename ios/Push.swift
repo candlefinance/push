@@ -126,7 +126,7 @@ extension Push: UNUserNotificationCenterDelegate {
             payload: ["payload": notification.request.content.userInfo, "uuid": uuid, "kind": "foreground"]
         )
         notificationCallbackDictionary[uuid] = {
-            completionHandler([.badge, .sound])
+            completionHandler([.badge, .banner, .sound, .list])
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 29) { [weak self] in
             if let callback = self?.notificationCallbackDictionary[uuid] {

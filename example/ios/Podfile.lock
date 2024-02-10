@@ -1,6 +1,6 @@
 PODS:
   - boost (1.83.0)
-  - candlefinance-push (0.1.0):
+  - candlefinance-push (0.2.0):
     - glog
     - RCT-Folly (= 2022.05.16.00)
     - React-Core
@@ -1313,7 +1313,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   boost: d3f49c53809116a5d38da093a8aa78bf551aed09
-  candlefinance-push: cf97ac3644e047bdb18f0649c1098458b864ff87
+  candlefinance-push: 2ba5d25c196f6747a06ec71912049779550211f9
   CocoaAsyncSocket: 065fd1e645c7abab64f7a6a2007a48038fdc6a99
   DoubleConversion: fea03f2699887d960129cc54bba7e52542b6f953
   FBLazyVector: 84f6edbe225f38aebd9deaf1540a4160b1f087d7
@@ -1375,6 +1375,6 @@ SPEC CHECKSUMS:
   SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17
   Yoga: 64cd2a583ead952b0315d5135bf39e053ae9be70
 
-PODFILE CHECKSUM: 99e34304b24cc319092484c659c60933f8d3e840
+PODFILE CHECKSUM: 1ee86fc72f645ae7f23c243df39d9a0a4df51c33
 
 COCOAPODS: 1.14.3
