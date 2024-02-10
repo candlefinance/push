@@ -25,13 +25,14 @@ class Push {
     return false;
   }
 
-  public registerForToken(): void {
+  public async registerForToken(): Promise<boolean> {
     if (Platform.OS === 'ios') {
-      this.module.registerForToken();
+      return this.module.registerForToken();
     }
+    return false;
   }
 
-  public isRegisteredForRemoteNotifications(): boolean {
+  public async isRegisteredForRemoteNotifications(): Promise<boolean> {
     if (Platform.OS === 'ios') {
       return this.module.isRegisteredForRemoteNotifications();
     }
@@ -56,4 +57,5 @@ class Push {
   }
 }
 
-export default Push;
+const push = new Push();
+export default push;

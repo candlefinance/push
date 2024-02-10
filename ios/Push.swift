@@ -75,16 +75,20 @@ public class Push: RCTEventEmitter {
         }
     }
     
-    @objc
-    static public func registerForToken() {
+    @objc(registerForToken:withRejecter:)
+    public func registerForToken(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         DispatchQueue.main.async {
             UIApplication.shared.registerForRemoteNotifications()
+            resolve(true)
         }
     }
     
-    @objc
-    static public func isRegisteredForRemoteNotifications() -> Bool {
-        return UIApplication.shared.isRegisteredForRemoteNotifications
+    @objc(isRegisteredForRemoteNotifications:withRejecter:)
+    public func isRegisteredForRemoteNotifications(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        DispatchQueue.main.async {
+            let value = UIApplication.shared.isRegisteredForRemoteNotifications
+            resolve(value)
+        }
     }
     
 }
