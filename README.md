@@ -42,7 +42,7 @@ await registerForToken();
 // Check permission status: 'granted', 'denied', or 'notDetermined'
 const status = await getAuthorizationStatus();
 
-// Listen for push APNS token
+// listeners
 push.addListener('notificationReceived', (data) => {
   console.log('notificationReceived', data);
   const uuid = data.uuid;
