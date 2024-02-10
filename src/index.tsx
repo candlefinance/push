@@ -1,22 +1,43 @@
-import { NativeModules, Platform } from 'react-native';
+import { NativeModules, Platform, NativeEventEmitter } from 'react-native';
 
-const LINKING_ERROR =
-  `The package '@candlefinance/push' doesn't seem to be linked. Make sure: \n\n` +
-  Platform.select({ ios: "- You have run 'pod install'\n", default: '' }) +
-  '- You rebuilt the app after installing the package\n' +
-  '- You are not using Expo Go\n';
+class Push {
+  module = NativeModules.Push;
+  private bridge?: NativeEventEmitter;
 
-const Push = NativeModules.Push
-  ? NativeModules.Push
-  : new Proxy(
-      {},
-      {
-        get() {
-          throw new Error(LINKING_ERROR);
-        },
-      }
-    );
+  public constructor() {
+    if (Platform.OS === 'ios') {
+      this.module = NativeModules.Push;
+    }
+  }
 
-export function multiply(a: number, b: number): Promise<number> {
-  return Push.multiply(a, b);
+  public async requestPermissions(): Promise<boolean> {
+    if (Platform.OS === 'ios') {
+      const result = await this.module.requestPermissions();
+      return result;
+    }
+    return false;
+  }
+
+  public registerForToken(): void {
+    if (Platform.OS === 'ios') {
+      this.module.registerForToken();
+    }
+  }
+
+  public isRegisteredForRemoteNotifications(): boolean {
+    if (Platform.OS === 'ios') {
+      return this.module.isRegisteredForRemoteNotifications();
+    }
+    return false;
+  }
+
+  public addListener(event: string, callback: (data: any) => void): void {
+    this.bridge?.addListener(event, callback);
+  }
+
+  public removeListener(event: string): void {
+    this.bridge?.removeAllListeners(event);
+  }
 }
+
+export default new Push();
