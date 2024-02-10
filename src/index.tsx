@@ -5,6 +5,13 @@ export type NotificationType =
   | 'deviceTokenReceived'
   | 'errorReceived';
 
+export type AuthorizationStatus =
+  | 'authorized'
+  | 'denied'
+  | 'ephemeral'
+  | 'notDetermined'
+  | 'provisional';
+
 class Push {
   module: any;
   private bridge?: NativeEventEmitter;
@@ -39,6 +46,34 @@ class Push {
     return false;
   }
 
+  public async onFinish(uuid: string): Promise<void> {
+    if (Platform.OS === 'ios') {
+      await this.module.onFinish(uuid);
+    }
+  }
+
+  // https://developer.apple.com/documentation/usernotifications/unauthorizationstatus?ref=createwithswift.com
+  public async getAuthorizationStatus(): Promise<AuthorizationStatus> {
+    if (Platform.OS === 'ios') {
+      const value: number = await this.module.getAuthorizationStatus();
+      switch (value) {
+        case 0:
+          return 'notDetermined';
+        case 1:
+          return 'denied';
+        case 2:
+          return 'authorized';
+        case 3:
+          return 'provisional';
+        case 4:
+          return 'ephemeral';
+        default:
+          return 'notDetermined';
+      }
+    }
+    return 'denied';
+  }
+
   public addListener(
     event: NotificationType,
     callback: (data: any) => void
@@ -48,12 +83,6 @@ class Push {
 
   public removeListener(event: NotificationType): void {
     this.bridge?.removeAllListeners(event);
-  }
-
-  public async onFinish(uuid: string): Promise<void> {
-    if (Platform.OS === 'ios') {
-      await this.module.onFinish(uuid);
-    }
   }
 }
 

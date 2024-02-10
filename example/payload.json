@@ -1,0 +1,9 @@
+{
+  "aps": {
+    "alert": {
+      "title": "Transfer Update",
+      "body": "Your Transfer has been downloaded"
+    },
+    "content-available": 1
+  }
+}

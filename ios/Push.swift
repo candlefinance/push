@@ -61,7 +61,7 @@ public class Push: RCTEventEmitter {
     }
     
     @objc(requestPermissions:withRejecter:)
-    public func requestPermissions(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    func requestPermissions(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
         DispatchQueue.main.async {
             UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
                 if let error = error {
@@ -75,8 +75,17 @@ public class Push: RCTEventEmitter {
         }
     }
     
+    @objc(getAuthorizationStatus:withRejecter:)
+    func getAuthorizationStatus(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+        DispatchQueue.main.async {
+            UNUserNotificationCenter.current().getNotificationSettings { settings in
+                resolve(settings.authorizationStatus.rawValue)
+            }
+        }
+    }
+    
     @objc(registerForToken:withRejecter:)
-    public func registerForToken(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    func registerForToken(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
         DispatchQueue.main.async {
             UIApplication.shared.registerForRemoteNotifications()
             resolve(true)
@@ -84,7 +93,7 @@ public class Push: RCTEventEmitter {
     }
     
     @objc(isRegisteredForRemoteNotifications:withRejecter:)
-    public func isRegisteredForRemoteNotifications(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    func isRegisteredForRemoteNotifications(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
         DispatchQueue.main.async {
             let value = UIApplication.shared.isRegisteredForRemoteNotifications
             resolve(value)
@@ -114,7 +123,7 @@ extension Push: UNUserNotificationCenterDelegate {
         let uuid = UUID().uuidString
         dispatch(
             type: NotificationType.notificationReceived.rawValue,
-            payload: ["payload": notification.request.content.userInfo, "uuid": uuid]
+            payload: ["payload": notification.request.content.userInfo, "uuid": uuid, "kind": "foreground"]
         )
         notificationCallbackDictionary[uuid] = {
             completionHandler([.badge, .sound])
@@ -130,7 +139,7 @@ extension Push: UNUserNotificationCenterDelegate {
     public func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
         dispatch(
             type: NotificationType.notificationReceived.rawValue,
-            payload: ["payload": response.notification.request.content.userInfo]
+            payload: ["payload": response.notification.request.content.userInfo, "kind": "opened"]
         )
     }
     
@@ -138,7 +147,7 @@ extension Push: UNUserNotificationCenterDelegate {
         let uuid = UUID().uuidString
         dispatch(
             type: NotificationType.notificationReceived.rawValue,
-            payload: ["payload": userInfo, "uuid": uuid]
+            payload: ["payload": userInfo, "uuid": uuid, "kind": "background"]
         )
         notificationCallbackDictionary[uuid] = {
             completionHandler(.newData)
