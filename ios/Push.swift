@@ -3,23 +3,53 @@ import NotificationCenter
 import React
 
 @objc(Push)
-class Push: RCTEventEmitter {
-    public static let shared = Push()
-
+public class Push: RCTEventEmitter {
+    
     private var notificationCallbackDictionary: [String: () -> Void] = [:]
+    private var isInitialized = false
+    private var queue: [Action] = []
     
-    override func supportedEvents() -> [String]! {
-      return ["notificationReceived", "deviceTokenReceived"]
+    @objc public override init() {
+        super.init()
+        UNUserNotificationCenter.current().delegate = self
     }
     
-    @objc
-    public func sendNotificationEvent(notification: UNNotification) {
-        Self.shared.sendEvent(withName: "notificationReceived", body: notification.request.content.userInfo)
+    enum NotificationType: String, CaseIterable {
+        case notificationReceived, deviceTokenReceived, errorReceived
     }
-
-    @objc
-    func sendTokenEvent(token: String) {
-        Self.shared.sendEvent(withName: "deviceTokenReceived", body: token)
+    
+    struct Action {
+        let type: NotificationType
+        let payload: Any!
+    }
+    
+    private func sendStoreAction(_ action: Action) {
+        self.sendEvent(withName: action.type.rawValue, body: action.payload)
+    }
+    
+    @objc public func dispatch(type: String, payload: Any!) {
+        let actionObj = Action(type: .init(rawValue: type) ?? .errorReceived, payload: payload)
+        if isInitialized {
+            self.sendStoreAction(actionObj)
+        } else {
+            self.queue.append(actionObj)
+        }
+    }
+    
+    @objc public override func startObserving() {
+        isInitialized = true
+        for event in queue {
+            sendStoreAction(event)
+        }
+        queue = []
+    }
+    
+    @objc public override func stopObserving() {
+        isInitialized = false
+    }
+    
+    public override func supportedEvents() -> [String]! {
+        return NotificationType.allCases.map { $0.rawValue }
     }
     
     @objc(onFinish:withResolver:withRejecter:)
@@ -29,12 +59,7 @@ class Push: RCTEventEmitter {
             notificationCallbackDictionary.removeValue(forKey: uuid)
         }
     }
-
-    @objc
-    public func addNotificationCallback(uuid: String, callback: @escaping () -> Void) {
-        notificationCallbackDictionary[uuid] = callback
-    }
-
+    
     @objc(requestPermissions:withRejecter:)
     public func requestPermissions(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         DispatchQueue.main.async {
@@ -49,23 +74,76 @@ class Push: RCTEventEmitter {
             }
         }
     }
-
+    
     @objc
     static public func registerForToken() {
         DispatchQueue.main.async {
             UIApplication.shared.registerForRemoteNotifications()
         }
     }
-
+    
     @objc
     static public func isRegisteredForRemoteNotifications() -> Bool {
-      return UIApplication.shared.isRegisteredForRemoteNotifications
+        return UIApplication.shared.isRegisteredForRemoteNotifications
     }
+    
+}
 
-    @objc
-    public func setTimer(for seconds: Double = 30, callback: @escaping () -> Void) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + seconds) {
-            callback()
+extension Push: UNUserNotificationCenterDelegate {
+    
+    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        let tokenParts = deviceToken.map { data -> String in
+            return String(format: "%02x", data)
+        }
+        let token = tokenParts.joined()
+        dispatch(type: NotificationType.deviceTokenReceived.rawValue, payload: token)
+    }
+    
+    func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        dispatch(
+            type: NotificationType.errorReceived.rawValue,
+            payload: error.localizedDescription
+        )
+    }
+    
+    public func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        let uuid = UUID().uuidString
+        dispatch(
+            type: NotificationType.notificationReceived.rawValue,
+            payload: ["payload": notification.request.content.userInfo, "uuid": uuid]
+        )
+        notificationCallbackDictionary[uuid] = {
+            completionHandler([.badge, .sound])
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 29) { [weak self] in
+            if let callback = self?.notificationCallbackDictionary[uuid] {
+                callback()
+                self?.notificationCallbackDictionary.removeValue(forKey: uuid)
+            }
+        }
+    }
+    
+    public func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
+        dispatch(
+            type: NotificationType.notificationReceived.rawValue,
+            payload: ["payload": response.notification.request.content.userInfo]
+        )
+    }
+    
+    func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        let uuid = UUID().uuidString
+        dispatch(
+            type: NotificationType.notificationReceived.rawValue,
+            payload: ["payload": userInfo, "uuid": uuid]
+        )
+        notificationCallbackDictionary[uuid] = {
+            completionHandler(.newData)
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 29) { [weak self] in
+            if let callback = self?.notificationCallbackDictionary[uuid] {
+                callback()
+                self?.notificationCallbackDictionary.removeValue(forKey: uuid)
+            }
         }
     }
     

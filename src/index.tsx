@@ -6,7 +6,7 @@ class Push {
 
   public constructor() {
     if (Platform.OS === 'ios') {
-      this.module = NativeModules.Push;
+      this.bridge = new NativeEventEmitter(this.module);
     }
   }
 
@@ -38,6 +38,12 @@ class Push {
   public removeListener(event: string): void {
     this.bridge?.removeAllListeners(event);
   }
+
+  public async onFinish(uuid: string): Promise<void> {
+    if (Platform.OS === 'ios') {
+      await this.module.onFinish(uuid);
+    }
+  }
 }
 
-export default new Push();
+export default Push;
