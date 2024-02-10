@@ -1,12 +1,19 @@
 import { NativeModules, Platform, NativeEventEmitter } from 'react-native';
 
+export type NotificationType =
+  | 'notificationReceived'
+  | 'deviceTokenReceived'
+  | 'errorReceived';
+
 class Push {
-  module = NativeModules.Push;
+  module: any;
   private bridge?: NativeEventEmitter;
 
   public constructor() {
     if (Platform.OS === 'ios') {
-      this.bridge = new NativeEventEmitter(this.module);
+      const module = NativeModules.Push;
+      this.module = module;
+      this.bridge = new NativeEventEmitter(module);
     }
   }
 
@@ -31,11 +38,14 @@ class Push {
     return false;
   }
 
-  public addListener(event: string, callback: (data: any) => void): void {
+  public addListener(
+    event: NotificationType,
+    callback: (data: any) => void
+  ): void {
     this.bridge?.addListener(event, callback);
   }
 
-  public removeListener(event: string): void {
+  public removeListener(event: NotificationType): void {
     this.bridge?.removeAllListeners(event);
   }
 
