@@ -15,7 +15,7 @@
 </div>
 
 <h1 align="center">
- Push for iOS
+ Push for React Native
 </h1>
 
 <br/>
@@ -48,6 +48,7 @@ This only works for iOS. For Android, check out the issue [#1](https://github.co
 
 1. You'll need to update your `AppDelegate.swift` to handle push check the example app [here](./example/ios/AppDelegate.swift) for an example.
 2. If your AppDelegate is in Objective-C (`.mm|.m|.h`), create a new `AppDelegate.swift` file and bridging header then delete the Objective-C AppDelegate and main.m file. Finally copy the contents of the example app's `AppDelegate.swift` and bridge header to your project.
+3. Make sure you're on `iOS 15` or later.
 
 <br>
 The following code is used to handle push notifications on the React Native side:
