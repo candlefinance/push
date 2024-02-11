@@ -96,6 +96,8 @@ yarn push
 
 This will use the [payload.json](./example/payload.json) file to send a push notification to the device. You can modify the payload to test different scenarios.
 
+Apple also has a new [console](https://developer.apple.com/notifications/push-notifications-console/) to test push notifications. If you print out the token from `deviceTokenReceived` listener, you can use it to send a push notification from the console.
+
 ## Contributing
 
 We are open to contributions. Please read our [Contributing Guide](CONTRIBUTING.md) for more information.
