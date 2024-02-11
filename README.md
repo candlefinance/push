@@ -1,5 +1,8 @@
 <br/>
 <div align="center">
+  <a href="https://www.npmjs.com/package/@candlefinance/push">
+  <img src="https://badge.fury.io/js/%40candlefinance%2Fpush.svg" alt="npm version" />
+</a>
   <a alt="npm" href="https://www.npmjs.com/package/@candlefinace/push">
       <img alt="npm downloads" src="https://img.shields.io/npm/dm/%40candlefinance%2@candlefinance/push"/>
   </a>
