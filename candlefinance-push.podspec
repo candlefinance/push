@@ -10,6 +10,7 @@ Pod::Spec.new do |s|
   s.homepage     = package["homepage"]
   s.license      = package["license"]
   s.authors      = package["author"]
+  s.swift_version = "5.0"
 
   s.platforms    = { :ios => "15.0" }
   s.source       = { :git => "https://github.com/candlefinance/push.git", :tag => "#{s.version}" }

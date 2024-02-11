@@ -9,8 +9,14 @@ export default function App() {
     React.useState<AuthorizationStatus>('notDetermined');
 
   React.useEffect(() => {
-    push.addListener('notificationReceived', (data) => {
+    push.addListener('notificationReceived', async (data) => {
       console.log('notificationReceived', data);
+      const uuid = data.uuid;
+
+      if (uuid) {
+        console.log('onFinish', uuid);
+        await push.onFinish(uuid);
+      }
     });
 
     push.addListener('deviceTokenReceived', (data) => {
@@ -30,8 +36,8 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <Text>Is Remote Enabled: {`${result}`}</Text>
-      <Text>Authorization Status: {status}</Text>
+      <Text style={styles.text}>Is Remote Enabled: {`${result}`}</Text>
+      <Text style={styles.text}>Authorization Status: {status}</Text>
       <Button
         title="is Registered for Remote Notifications"
         onPress={() => {
@@ -72,5 +78,10 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     marginVertical: 20,
+  },
+  text: {
+    fontSize: 17,
+    fontWeight: '400',
+    marginBottom: 20,
   },
 });

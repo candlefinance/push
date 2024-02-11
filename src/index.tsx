@@ -1,4 +1,4 @@
-import { NativeModules, Platform, NativeEventEmitter } from 'react-native';
+import { NativeEventEmitter, NativeModules, Platform } from 'react-native';
 
 export type NotificationType =
   | 'notificationReceived'
@@ -11,6 +11,34 @@ export type AuthorizationStatus =
   | 'ephemeral'
   | 'notDetermined'
   | 'provisional';
+
+export interface NotificationReceivedData {
+  kind: 'foreground' | 'background' | 'opened';
+  payload: {
+    aps: {
+      'alert'?: {
+        title?: string;
+        body?: string;
+        subtitle?: string;
+      };
+      'sound'?: string;
+      'badge'?: number;
+      'content-available'?: number;
+      'category'?: string;
+    };
+    custom?: any;
+  };
+  uuid?: string;
+}
+
+type DeviceTokenReceivedData = string;
+type ErrorReceivedData = string;
+
+interface NotificationCallbacks {
+  notificationReceived: (data: NotificationReceivedData) => void;
+  deviceTokenReceived: (data: DeviceTokenReceivedData) => void;
+  errorReceived: (data: ErrorReceivedData) => void;
+}
 
 class Push {
   module: any;
@@ -74,15 +102,19 @@ class Push {
     return 'denied';
   }
 
-  public addListener(
-    event: NotificationType,
-    callback: (data: any) => void
+  public addListener<T extends keyof NotificationCallbacks>(
+    event: T,
+    callback: NotificationCallbacks[T]
   ): void {
-    this.bridge?.addListener(event, callback);
+    if (Platform.OS === 'ios') {
+      this.bridge?.addListener(event, callback);
+    }
   }
 
-  public removeListener(event: NotificationType): void {
-    this.bridge?.removeAllListeners(event);
+  public removeListener<T extends keyof NotificationCallbacks>(event: T): void {
+    if (Platform.OS === 'ios') {
+      this.bridge?.removeAllListeners(event);
+    }
   }
 }
 

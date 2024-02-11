@@ -66,8 +66,8 @@ final public class Push: RCTEventEmitter {
     @objc(requestPermissions:withRejecter:)
     func requestPermissions(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
         DispatchQueue.main.async {
+            UIApplication.shared.registerForRemoteNotifications()
             UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
-                UIApplication.shared.registerForRemoteNotifications()
                 if let error = error {
                     reject("permission_error", error.localizedDescription, error)
                 } else if granted {

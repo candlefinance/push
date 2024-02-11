@@ -1,9 +1,13 @@
 {
   "aps": {
     "alert": {
-      "title": "Transfer Update",
-      "body": "Your Transfer has been downloaded"
+      "title": "Hello World",
+      "body": "Hello, this is a push notification."
     },
     "content-available": 1
+  },
+  "custom": {
+    "key1": "value1",
+    "key2": "value2"
   }
 }
