@@ -41,6 +41,7 @@ class AppDelegate: RCTAppDelegate {
   
 }
 
+// 4
 extension AppDelegate: UNUserNotificationCenterDelegate {
   
   override func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {

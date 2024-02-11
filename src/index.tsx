@@ -12,7 +12,7 @@ export type AuthorizationStatus =
   | 'notDetermined'
   | 'provisional';
 
-export interface NotificationReceivedData {
+export type NotificationReceivedData = {
   kind: 'foreground' | 'background' | 'opened';
   payload: {
     aps: {
@@ -29,7 +29,7 @@ export interface NotificationReceivedData {
     custom?: any;
   };
   uuid?: string;
-}
+};
 
 type DeviceTokenReceivedData = string;
 type ErrorReceivedData = string;
