@@ -26,6 +26,10 @@
 yarn add @candlefinance/push
 ```
 
+The motivation to write this came from the unmaintained and outdatated libraries that exist today. This implementation is written in Swift in less than 200 lines of code.
+
+Andriod support is coming soon. Checkout [#1](https://github.com/candlefinance/push/issues/1) if you want to help.
+
 ## Usage
 
 This only works for iOS. For Android, check out the issue [#1](https://github.com/candlefinance/push/issues/1).
@@ -40,8 +44,13 @@ This only works for iOS. For Android, check out the issue [#1](https://github.co
   - [x] Opened by tapping on the notification
 - [ ] Local push notifications
 
-1. You'll need to update your `AppDelegate.swift` or `AppDelegate.mm` to handle push notifications.
-2. The following code is used to handle push notifications on the React Native side:
+#### Setup
+
+1. You'll need to update your `AppDelegate.swift` to handle push check the example app [here](./example/ios/AppDelegate.swift) for an example.
+2. If your AppDelegate is in Objective-C (`.mm|.m|.h`), create a new `AppDelegate.swift` file and bridging header then delete the Objective-C AppDelegate and main.m file. Finally copy the contents of the example app's `AppDelegate.swift` and bridge header to your project.
+
+<br>
+The following code is used to handle push notifications on the React Native side:
 
 ```js
 import push from '@candlefinance/push';
@@ -55,9 +64,11 @@ await push.registerForToken();
 // Check permission status: 'granted', 'denied', or 'notDetermined'
 const status = await push.getAuthorizationStatus();
 
+// Check if APNS token is registered
+const isRegistered = await push.isRegisteredForRemoteNotifications();
+
 // Listeners
 push.addListener('notificationReceived', (data) => {
-  console.log('notificationReceived', data);
   const uuid = data.uuid;
   const kind = data.kind; // foreground, background, or opened
   const payload = data.payload;
@@ -67,19 +78,24 @@ push.addListener('notificationReceived', (data) => {
   }
 });
 
-push.addListener('deviceTokenReceived', (token) => {
-  const token: string = token;
-});
-
-push.addListener('errorReceived', (data) => {
-  console.log('errorReceived', data);
-});
+push.addListener('deviceTokenReceived', (token) => {});
+push.addListener('errorReceived', (error) => {});
 
 // Remove listeners
 push.removeListener('notificationReceived');
 push.removeListener('deviceTokenReceived');
 push.removeListener('errorReceived');
 ```
+
+## Testing
+
+If you run the example app, you can test push notifications by running the following command:
+
+```sh
+yarn push
+```
+
+This will use the [payload.json](./example/payload.json) file to send a push notification to the device. You can modify the payload to test different scenarios.
 
 ## Contributing
 
