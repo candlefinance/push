@@ -28,7 +28,20 @@ yarn add @candlefinance/push
 
 ## Usage
 
-There is no native code required, that is all abstracted away. Here is a simple example of how to use the package:
+This only works for iOS. For Android, check out the issue [#1](https://github.com/candlefinance/push/issues/1).
+
+### iOS
+
+- [x] Request permissions
+- [x] Register for APNS token
+- [x] Remote push notifications
+  - [x] Foreground
+  - [x] Background
+  - [x] Opened by tapping on the notification
+- [ ] Local push notifications
+
+1. You'll need to update your `AppDelegate.swift` or `AppDelegate.mm` to handle push notifications.
+2. The following code is used to handle push notifications on the React Native side:
 
 ```js
 import push from '@candlefinance/push';
@@ -62,11 +75,10 @@ push.addListener('errorReceived', (data) => {
   console.log('errorReceived', data);
 });
 
-return () => {
-  push.removeListener('notificationReceived');
-  push.removeListener('deviceTokenReceived');
-  push.removeListener('errorReceived');
-};
+// Remove listeners
+push.removeListener('notificationReceived');
+push.removeListener('deviceTokenReceived');
+push.removeListener('errorReceived');
 ```
 
 ## Contributing
