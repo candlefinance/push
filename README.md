@@ -1,4 +1,5 @@
 <br/>
+<div align="center">
 <a href="https://www.npmjs.com/package/@candlefinance/push">
   <img src="https://img.shields.io/npm/dm/@candlefinance/push" alt="npm downloads" />
 </a>
