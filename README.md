@@ -1,7 +1,6 @@
 <br/>
-<div align="center">
-  <a href="https://www.npmjs.com/package/@candlefinance/push">
-  <img src="https://badge.fury.io/js/%40candlefinance%2Fpush.svg" alt="npm version" />
+<a href="https://www.npmjs.com/package/@candlefinance/push">
+  <img src="https://img.shields.io/npm/dm/@candlefinance/push" alt="npm downloads" />
 </a>
   <a alt="discord users online" href="https://discord.gg/qnAgjxhg6n" 
   target="_blank"
