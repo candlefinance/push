@@ -148,6 +148,14 @@ extension Push: UNUserNotificationCenterDelegate {
     }
     
     public func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        if application.applicationState == .active {
+            Self.dispatch(
+                type: NotificationType.errorReceived.rawValue,
+                payload: "Background notification received while the app is foregrounded state, use to handle `notificationReceived` in the foreground."
+            )
+            completionHandler(.newData)
+            return
+        }
         let uuid = UUID().uuidString
         Self.dispatch(
             type: NotificationType.notificationReceived.rawValue,
