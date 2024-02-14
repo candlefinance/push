@@ -13,7 +13,6 @@ export type AuthorizationStatus =
   | 'provisional';
 
 export type NotificationReceivedData = {
-  kind: 'foreground' | 'background' | 'opened';
   payload: {
     aps: {
       'alert'?: {
@@ -28,8 +27,12 @@ export type NotificationReceivedData = {
     };
     custom?: any;
   };
-  uuid?: string;
-};
+} & (
+  | {
+      kind: 'opened';
+    }
+  | { kind: 'foreground' | 'background'; uuid: string }
+);
 
 type DeviceTokenReceivedData = string;
 type ErrorReceivedData = string;

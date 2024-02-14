@@ -11,11 +11,17 @@ export default function App() {
   React.useEffect(() => {
     push.addListener('notificationReceived', async (data) => {
       console.log('notificationReceived', data);
-      const uuid = data.uuid;
-
-      if (uuid) {
-        console.log('onFinish', uuid);
-        await push.onFinish(uuid);
+      switch (data.kind) {
+        case 'opened':
+          console.log('opened');
+          break;
+        case 'foreground':
+        case 'background':
+          console.log('foreground/background');
+          const { uuid } = data;
+          await push.onFinish(uuid);
+          break;
+        // return { badge: 0, sound: '', alert: '' };
       }
     });
 
