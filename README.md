@@ -68,13 +68,18 @@ const isRegistered = await push.isRegisteredForRemoteNotifications();
 
 // Listeners
 push.addListener('notificationReceived', (data) => {
-  const uuid = data.uuid;
-  const kind = data.kind; // foreground, background, or opened
-  const payload = data.payload;
-  if (uuid) {
-    // Required to tell iOS that the push was received, if not called, the library will call this in 30 seconds
-    await push.onFinish(uuid);
+  switch (data.kind) {
+     case 'opened':
+       console.log('opened');
+       break;
+     case 'foreground':
+     case 'background':
+       console.log('foreground/background');
+       const { uuid } = data;
+       await push.onFinish(uuid);
+       break;
   }
+  const { title, body } = data;
 });
 
 push.addListener('deviceTokenReceived', (token) => {});
