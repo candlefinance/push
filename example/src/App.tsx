@@ -70,6 +70,19 @@ export default function App() {
         title="Register for Token"
         onPress={() => push.registerForToken()}
       />
+      <Button
+        title="Get FCM Token"
+        onPress={() =>
+          push
+            .getToken()
+            .then((token) => {
+              console.log('Token :', token);
+            })
+            .catch((e) => {
+              console.log('Error while fetching deivce FCM token', e);
+            })
+        }
+      />
     </View>
   );
 }
