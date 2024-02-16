@@ -56,25 +56,12 @@ class Push {
   }
 
   public async requestPermissions(): Promise<boolean> {
-    // if (Platform.OS === 'ios') {
     const result = await this.module.requestPermissions();
     return result;
-    // }
-    // return false;
   }
 
   public async registerForToken(): Promise<boolean> {
-    if (Platform.OS === 'ios') {
-      return this.module.registerForToken();
-    }
-    return false;
-  }
-
-  public async getToken(): Promise<boolean> {
-    if (Platform.OS === 'android') {
-      return this.module.getToken();
-    }
-    return false;
+    return this.module.registerForToken();
   }
 
   public async isRegisteredForRemoteNotifications(): Promise<boolean> {

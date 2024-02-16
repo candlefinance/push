@@ -22,12 +22,6 @@ class PushModule(reactContext: ReactApplicationContext) :
     return NAME
   }
 
-  // Example method
-  // See https://reactnative.dev/docs/native-modules-android
-  @ReactMethod
-  fun multiply(a: Double, b: Double, promise: Promise) {
-    promise.resolve(a * b)
-  }
 
 
 
@@ -50,8 +44,8 @@ class PushModule(reactContext: ReactApplicationContext) :
 
             val listener = PermissionListener { requestCode: Int, _: Array<String>, grantResults: IntArray ->
               if (requestCode == currentRequestCode) {
-                val permissionStatus = if (grantResults.isNotEmpty()) grantResults[0] else PackageManager.PERMISSION_DENIED
-                promise.resolve(permissionStatus== PackageManager.PERMISSION_GRANTED)
+                val isPermissionGranted = grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
+                promise.resolve(isPermissionGranted)
                 return@PermissionListener true
               }
               return@PermissionListener false
@@ -70,7 +64,7 @@ class PushModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun getToken(promise: Promise) {
+  fun registerForToken(promise: Promise) {
     FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
       if (!task.isSuccessful) {
         Log.w("getTokenError", "Fetching FCM registration token failed", task.exception)
@@ -78,7 +72,6 @@ class PushModule(reactContext: ReactApplicationContext) :
         return@OnCompleteListener
       }
 
-      // Get new FCM registration token
       val token = task.result
       promise.resolve(token)
     })
