@@ -77,26 +77,22 @@ class Push {
     }
   }
 
-  // https://developer.apple.com/documentation/usernotifications/unauthorizationstatus?ref=createwithswift.com
   public async getAuthorizationStatus(): Promise<AuthorizationStatus> {
-    if (Platform.OS === 'ios') {
-      const value: number = await this.module.getAuthorizationStatus();
-      switch (value) {
-        case 0:
-          return 'notDetermined';
-        case 1:
-          return 'denied';
-        case 2:
-          return 'authorized';
-        case 3:
-          return 'provisional';
-        case 4:
-          return 'ephemeral';
-        default:
-          return 'notDetermined';
-      }
+    const value: number = await this.module.getAuthorizationStatus();
+    switch (value) {
+      case 0:
+        return 'notDetermined';
+      case 1:
+        return 'denied';
+      case 2:
+        return 'authorized';
+      case 3:
+        return 'provisional';
+      case 4:
+        return 'ephemeral';
+      default:
+        return 'notDetermined';
     }
-    return 'denied';
   }
 
   public addListener<T extends keyof NotificationCallbacks>(

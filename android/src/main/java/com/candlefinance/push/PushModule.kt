@@ -23,7 +23,22 @@ class PushModule(reactContext: ReactApplicationContext) :
   }
 
 
+  @ReactMethod
+  fun getAuthorizationStatus(promise: Promise) {
+    val context = reactApplicationContext.baseContext
 
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) ==
+        PackageManager.PERMISSION_GRANTED
+      ) {
+        promise.resolve(2) // authorized
+      } else {
+        promise.resolve(1) // denied
+      }
+    } else {
+      promise.resolve(2) // authorized
+    }
+  }
 
   @ReactMethod
   fun requestPermissions(promise: Promise) {
