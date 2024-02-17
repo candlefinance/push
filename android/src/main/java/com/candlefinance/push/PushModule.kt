@@ -14,12 +14,20 @@ import com.facebook.react.modules.core.PermissionListener
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.messaging.FirebaseMessaging
 
-
 class PushModule(reactContext: ReactApplicationContext) :
   ReactContextBaseJavaModule(reactContext) {
 
   override fun getName(): String {
     return NAME
+  }
+
+  override fun initialize() {
+    super.initialize()
+    NotificationUtils.createDefaultNotificationChannel(reactApplicationContext)
+    if (ContextHolder.getApplicationContext() == null) {
+      ContextHolder.setApplicationContext(reactApplicationContext.applicationContext)
+    }
+
   }
 
 
