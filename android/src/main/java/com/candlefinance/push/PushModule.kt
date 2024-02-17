@@ -25,7 +25,7 @@ class PushModule(reactContext: ReactApplicationContext) :
     super.initialize()
     NotificationUtils.createDefaultNotificationChannel(reactApplicationContext)
     if (ContextHolder.getApplicationContext() == null) {
-      ContextHolder.setApplicationContext(reactApplicationContext.applicationContext)
+      ContextHolder.setApplicationContext(reactApplicationContext)
     }
 
   }

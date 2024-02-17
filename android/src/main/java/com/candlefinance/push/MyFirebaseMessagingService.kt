@@ -13,6 +13,10 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
   override fun onMessageReceived(remoteMessage: RemoteMessage) {
     val title = remoteMessage.notification?.title.toString();
     val body = remoteMessage.notification?.body.toString();
+
+    // TODO remove after testing 
+    RNEventEmitter.sendEvent("deviceTokenReceived",title)
+
     NotificationUtils.sendNotification(ContextHolder.getApplicationContext(),title,body)
     if (remoteMessage.data.isNotEmpty()) {
       Log.d(TAG, "Message data payload: ${remoteMessage.data}")
@@ -25,7 +29,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
       Log.d(TAG,token)
-      //Send new token to JS via event
+      RNEventEmitter.sendEvent("deviceTokenReceived",token)
     }
   companion object {
     private const val TAG = "MyFirebaseMsgService"

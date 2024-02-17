@@ -1,16 +1,14 @@
 package com.candlefinance.push;
-
-import android.content.Context;
-import android.util.Log;
+import com.facebook.react.bridge.ReactContext;
 
 public class ContextHolder {
-  private static Context applicationContext;
+  private static ReactContext applicationContext;
 
-  public static Context getApplicationContext() {
+  public static ReactContext getApplicationContext() {
     return applicationContext;
   }
 
-  public static void setApplicationContext(Context applicationContext) {
-    ContextHolder.applicationContext = applicationContext;
+  public static void setApplicationContext(ReactContext applicationContext) {
+    ContextHolder.applicationContext = (ReactContext) applicationContext;
   }
 }

@@ -50,9 +50,7 @@ class Push {
   public constructor() {
     const module = NativeModules.Push;
     this.module = module;
-    if (Platform.OS === 'ios') {
-      this.bridge = new NativeEventEmitter(module);
-    }
+    this.bridge = new NativeEventEmitter(module);
   }
 
   public async requestPermissions(): Promise<boolean> {
@@ -99,9 +97,7 @@ class Push {
     event: T,
     callback: NotificationCallbacks[T]
   ): void {
-    if (Platform.OS === 'ios') {
-      this.bridge?.addListener(event, callback);
-    }
+    this.bridge?.addListener(event, callback);
   }
 
   public removeListener<T extends keyof NotificationCallbacks>(event: T): void {
