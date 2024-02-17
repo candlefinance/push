@@ -99,7 +99,15 @@ class PushModule(reactContext: ReactApplicationContext) :
       promise.resolve(token)
     })
   }
+  @ReactMethod
+  fun addListener(type: String?) {
+    // Keep: Required for RN built in Event Emitter Calls.
+  }
 
+  @ReactMethod
+  fun removeListeners(type: Int?) {
+    // Keep: Required for RN built in Event Emitter Calls.
+  }
   companion object {
     const val NAME = "Push"
   }
