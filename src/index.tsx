@@ -101,9 +101,7 @@ class Push {
   }
 
   public removeListener<T extends keyof NotificationCallbacks>(event: T): void {
-    if (Platform.OS === 'ios') {
-      this.bridge?.removeAllListeners(event);
-    }
+    this.bridge?.removeAllListeners(event);
   }
 }
 

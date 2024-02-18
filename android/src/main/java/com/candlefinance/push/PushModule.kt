@@ -23,11 +23,8 @@ class PushModule(reactContext: ReactApplicationContext) :
 
   override fun initialize() {
     super.initialize()
-    NotificationUtils.createDefaultNotificationChannel(reactApplicationContext)
-    if (ContextHolder.getApplicationContext() == null) {
-      ContextHolder.setApplicationContext(reactApplicationContext)
-    }
-
+    NotificationUtils.createDefaultChannelForFCM(reactApplicationContext)
+    ContextHolder.getInstance().setApplicationContext(reactApplicationContext)
   }
 
 
@@ -99,6 +96,7 @@ class PushModule(reactContext: ReactApplicationContext) :
       promise.resolve(token)
     })
   }
+
   @ReactMethod
   fun addListener(type: String?) {
     // Keep: Required for RN built in Event Emitter Calls.
@@ -108,6 +106,19 @@ class PushModule(reactContext: ReactApplicationContext) :
   fun removeListeners(type: Int?) {
     // Keep: Required for RN built in Event Emitter Calls.
   }
+
+  @ReactMethod
+  fun testEvent(test: String) {
+    RNEventEmitter.sendEvent("notificationReceived", test)
+  }
+
+  @ReactMethod
+  fun createNotificationChannel(channelId: String,
+                                channelName: String,
+                                channelDescription: String) {
+    NotificationUtils.createNotificationChannel(reactApplicationContext, channelId, channelName, channelDescription)
+  }
+
   companion object {
     const val NAME = "Push"
   }

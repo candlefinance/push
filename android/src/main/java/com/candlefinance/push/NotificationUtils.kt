@@ -12,31 +12,42 @@ import java.util.Locale
 
 object NotificationUtils {
 
-  private  val CHANNEL_ID = "RNFireDefaultChannelID"
-  private  val CHANNEL_NAME = "Firebase Default"
-  private val NOTIFICATION_ID = 123321
+  private const val NOTIFICATION_ID = 123321
 
-  fun createDefaultNotificationChannel (context:Context){
-    val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+  fun createNotificationChannel(
+    context: Context,
+    channelId: String,
+    channelName: String,
+    channelDescription: String
+  ) {
+    val notificationManager =
+      context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
       val channel = NotificationChannel(
-        CHANNEL_ID,
-        CHANNEL_NAME,
-        NotificationManager.IMPORTANCE_DEFAULT
+        channelId,
+        channelName,
+        NotificationManager.IMPORTANCE_HIGH
       )
-      channel.description = "All by default notification channel for all firebase notification"
+      channel.description = channelDescription
       notificationManager.createNotificationChannel(channel)
     }
+  }
 
+  fun createDefaultChannelForFCM(context:Context){
+   val defaultChannelId=  context.resources.getString(R.string.default_notification_channel_id)
+    val defaultChannelName = context.resources.getString(R.string.default_notification_channel_name)
+    this
+      .createNotificationChannel(context, defaultChannelId, defaultChannelName,"Default channel created by RN Push module to All FCM notification")
   }
   fun sendNotification(context: Context, title: String, message: String) {
+    val defaultChannelId=  context.resources.getString(R.string.default_notification_channel_id)
     val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-    val builder = NotificationCompat.Builder(context, CHANNEL_ID)
+    val builder = NotificationCompat.Builder(context, defaultChannelId)
       .setSmallIcon(getResourceIdByName("ic_launcher","mipmap"))
       .setContentTitle(title)
       .setContentText(message)
-      .setPriority(NotificationCompat.PRIORITY_DEFAULT).setChannelId(CHANNEL_ID)
+      .setPriority(NotificationCompat.PRIORITY_DEFAULT)
 
     notificationManager.notify(NOTIFICATION_ID, builder.build())
   }
@@ -48,10 +59,9 @@ object NotificationUtils {
       return 0
     }
     name = name.lowercase(Locale.getDefault()).replace("-", "_")
-    val key = name + "_" + type
     synchronized(ResourceUtils::class.java) {
 
-      val context = ContextHolder.getApplicationContext()
+      val context = ContextHolder.getInstance().getApplicationContext()
       val packageName = context.packageName
       return context.resources.getIdentifier(name, type, packageName)
     }

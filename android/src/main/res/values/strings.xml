@@ -1,0 +1,4 @@
+<resources>
+    <string name="default_notification_channel_id">fcm_default_channel</string>
+    <string name="default_notification_channel_name">FCM Default Channel</string>
+</resources>
