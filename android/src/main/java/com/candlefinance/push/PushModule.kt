@@ -85,16 +85,13 @@ class PushModule(reactContext: ReactApplicationContext) :
 
   @ReactMethod
   fun registerForToken(promise: Promise) {
-    FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
-      if (!task.isSuccessful) {
-        Log.w("getTokenError", "Fetching FCM registration token failed", task.exception)
-        promise.reject(task.exception)
-        return@OnCompleteListener
-      }
+    FirebaseMessaging.getInstance().isAutoInitEnabled=true;
+    promise.resolve(true)
+  }
 
-      val token = task.result
-      promise.resolve(token)
-    })
+  @ReactMethod
+  fun isRegisteredForRemoteNotifications(promise: Promise) {
+    promise.resolve(FirebaseMessaging.getInstance().isAutoInitEnabled)
   }
 
   @ReactMethod

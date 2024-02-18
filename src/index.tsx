@@ -63,10 +63,7 @@ class Push {
   }
 
   public async isRegisteredForRemoteNotifications(): Promise<boolean> {
-    if (Platform.OS === 'ios') {
-      return this.module.isRegisteredForRemoteNotifications();
-    }
-    return false;
+    return this.module.isRegisteredForRemoteNotifications();
   }
 
   public async onFinish(uuid: string): Promise<void> {
