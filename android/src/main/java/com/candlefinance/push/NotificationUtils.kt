@@ -44,7 +44,7 @@ object NotificationUtils {
     val defaultChannelId=  context.resources.getString(R.string.default_notification_channel_id)
     val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     val builder = NotificationCompat.Builder(context, defaultChannelId)
-      .setSmallIcon(getResourceIdByName("ic_launcher","mipmap"))
+      .setSmallIcon(getResourceIdByName("ic_default_notification","drawable"))
       .setContentTitle(title)
       .setContentText(message)
       .setPriority(NotificationCompat.PRIORITY_DEFAULT)
