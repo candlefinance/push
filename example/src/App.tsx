@@ -17,7 +17,7 @@ export default function App() {
           break;
         case 'foreground':
         case 'background':
-          console.log('foreground/background');
+          console.log('foreground/background', data);
           const { uuid } = data;
           await push.onFinish(uuid);
           break;

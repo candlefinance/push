@@ -48,6 +48,23 @@ Andriod support is coming soon. Checkout [#1](https://github.com/candlefinance/p
 2. If your AppDelegate is in Objective-C (`.mm|.m|.h`), create a new `AppDelegate.swift` file and bridging header then delete the Objective-C AppDelegate and main.m file. Finally copy the contents of the example app's [AppDelegate.swift](./example/ios/AppDelegate.swift) and [bridge header](./example/ios/PushExample-Bridging-Header.h) to your project.
 3. Make sure you're on `iOS 15` or later.
 
+### Android
+
+- [x] Request permissions
+- [x] Register for FCM token
+- [ ] Remote push notifications
+  - [ ] Foreground
+  - [ ] Background
+  - [ ] Opened by tapping on the notification
+- [ ] Local push notifications
+
+#### Setup
+
+1. Add permissions in [AndroidManifest.xml](./example/android/app/src/main/AndroidManifest.xml)
+2. Add `google-services.json` in `android/app` directory from Firebase console.
+
+## API
+
 <br>
 The following code is used to handle push notifications on the React Native side:
 

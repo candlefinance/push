@@ -48,33 +48,22 @@ class Push {
   private bridge?: NativeEventEmitter;
 
   public constructor() {
-    if (Platform.OS === 'ios') {
-      const module = NativeModules.Push;
-      this.module = module;
-      this.bridge = new NativeEventEmitter(module);
-    }
+    const module = NativeModules.Push;
+    this.module = module;
+    this.bridge = new NativeEventEmitter(module);
   }
 
   public async requestPermissions(): Promise<boolean> {
-    if (Platform.OS === 'ios') {
-      const result = await this.module.requestPermissions();
-      return result;
-    }
-    return false;
+    const result = await this.module.requestPermissions();
+    return result;
   }
 
   public async registerForToken(): Promise<boolean> {
-    if (Platform.OS === 'ios') {
-      return this.module.registerForToken();
-    }
-    return false;
+    return this.module.registerForToken();
   }
 
   public async isRegisteredForRemoteNotifications(): Promise<boolean> {
-    if (Platform.OS === 'ios') {
-      return this.module.isRegisteredForRemoteNotifications();
-    }
-    return false;
+    return this.module.isRegisteredForRemoteNotifications();
   }
 
   public async onFinish(uuid: string): Promise<void> {
@@ -83,41 +72,33 @@ class Push {
     }
   }
 
-  // https://developer.apple.com/documentation/usernotifications/unauthorizationstatus?ref=createwithswift.com
   public async getAuthorizationStatus(): Promise<AuthorizationStatus> {
-    if (Platform.OS === 'ios') {
-      const value: number = await this.module.getAuthorizationStatus();
-      switch (value) {
-        case 0:
-          return 'notDetermined';
-        case 1:
-          return 'denied';
-        case 2:
-          return 'authorized';
-        case 3:
-          return 'provisional';
-        case 4:
-          return 'ephemeral';
-        default:
-          return 'notDetermined';
-      }
+    const value: number = await this.module.getAuthorizationStatus();
+    switch (value) {
+      case 0:
+        return 'notDetermined';
+      case 1:
+        return 'denied';
+      case 2:
+        return 'authorized';
+      case 3:
+        return 'provisional';
+      case 4:
+        return 'ephemeral';
+      default:
+        return 'notDetermined';
     }
-    return 'denied';
   }
 
   public addListener<T extends keyof NotificationCallbacks>(
     event: T,
     callback: NotificationCallbacks[T]
   ): void {
-    if (Platform.OS === 'ios') {
-      this.bridge?.addListener(event, callback);
-    }
+    this.bridge?.addListener(event, callback);
   }
 
   public removeListener<T extends keyof NotificationCallbacks>(event: T): void {
-    if (Platform.OS === 'ios') {
-      this.bridge?.removeAllListeners(event);
-    }
+    this.bridge?.removeAllListeners(event);
   }
 }
 
