@@ -52,8 +52,8 @@ Andriod support is coming soon. Checkout [#1](https://github.com/candlefinance/p
 
 - [x] Request permissions
 - [x] Register for FCM token
-- [ ] Remote push notifications
-  - [ ] Foreground
+- [x] Remote push notifications
+  - [x] Foreground
   - [ ] Background
   - [ ] Opened by tapping on the notification
 - [ ] Local push notifications
