@@ -35,10 +35,12 @@ class FirebaseMessagingService : FirebaseMessagingService() {
 
     // Send the event
     RNEventEmitter.sendEvent(notificationReceived, formattedData.toString())
-    NotificationUtils
-      .sendNotification(
-        ContextHolder.getInstance().getApplicationContext(), title, body
-      )
+    ContextHolder.getInstance().getApplicationContext()?.let {
+      NotificationUtils
+        .sendNotification(
+          it, title, body
+        )
+    }
     if (remoteMessage.data.isNotEmpty()) {
       Log.d(TAG, "Message data payload: ${remoteMessage.data}")
     }
@@ -58,7 +60,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
   // TODO: make this actually work
   private fun getAppState(): String {
     val reactContext = ContextHolder.getInstance().getApplicationContext()
-    val currentActivity = reactContext.currentActivity
+    val currentActivity = reactContext?.currentActivity
     return if (currentActivity == null) {
       "background"
     } else {

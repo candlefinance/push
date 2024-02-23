@@ -62,8 +62,12 @@ object NotificationUtils {
     synchronized(ResourceUtils::class.java) {
 
       val context = ContextHolder.getInstance().getApplicationContext()
-      val packageName = context.packageName
-      return context.resources.getIdentifier(name, type, packageName)
+      val packageName = context?.packageName
+      if (context != null) {
+        return context.resources.getIdentifier(name, type, packageName)
+      } else {
+        return -1
+      }
     }
   }
 }

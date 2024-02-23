@@ -20,9 +20,9 @@ class ContextHolder private constructor() {
     }
   }
 
-  fun getApplicationContext(): ReactContext {
+  fun getApplicationContext(): ReactContext? {
     if (!::applicationContext.isInitialized) {
-      throw IllegalStateException("Application context not initialized. Call setApplicationContext() first.")
+      return null
     }
     return applicationContext
   }
