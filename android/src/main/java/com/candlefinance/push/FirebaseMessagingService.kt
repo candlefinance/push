@@ -27,11 +27,11 @@ class FirebaseMessagingService : FirebaseMessagingService() {
     })
     formattedData.put("payload", JSONObject().apply {
         put("aps", apsData)
+        put("custom", JSONObject(mapToString(remoteMessage.data)))
     })
 
     formattedData.put("kind", getAppState())
     formattedData.put("uuid", UUID.randomUUID().toString())
-    formattedData.put("custom", remoteMessage.data.toString())
 
     // Send the event
     RNEventEmitter.sendEvent(notificationReceived, formattedData.toString())
@@ -45,6 +45,14 @@ class FirebaseMessagingService : FirebaseMessagingService() {
     remoteMessage.notification?.let {
       Log.d(TAG, "Message Notification Body: ${it.body}")
     }
+  }
+
+  private fun mapToString(map: Map<String, String>): String {
+    val json = JSONObject()
+    for ((key, value) in map) {
+      json.put(key, value)
+    }
+    return json.toString()
   }
 
   // TODO: make this actually work
