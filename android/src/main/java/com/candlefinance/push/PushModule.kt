@@ -54,9 +54,7 @@ class PushModule(reactContext: ReactApplicationContext) :
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) ==
           PackageManager.PERMISSION_GRANTED
         ) {
-          promise
-            .resolve(true)
-
+          registerForToken(promise)
         } else {
           val activity = reactApplicationContext.currentActivity
 
@@ -66,8 +64,11 @@ class PushModule(reactContext: ReactApplicationContext) :
             val listener = PermissionListener { requestCode: Int, _: Array<String>, grantResults: IntArray ->
               if (requestCode == currentRequestCode) {
                 val isPermissionGranted = grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
-                promise.resolve(isPermissionGranted)
-                return@PermissionListener true
+                if (isPermissionGranted) {
+                  registerForToken(promise)
+                  return@PermissionListener true
+                }
+                return@PermissionListener false
               }
               return@PermissionListener false
             }
@@ -87,12 +88,28 @@ class PushModule(reactContext: ReactApplicationContext) :
   @ReactMethod
   fun registerForToken(promise: Promise) {
     FirebaseMessaging.getInstance().isAutoInitEnabled=true;
+    FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
+      if (!task.isSuccessful) {
+        RNEventEmitter.sendEvent(FirebaseMessagingService.errorReceived, "Fetching FCM registration token failed ${task.exception?.message}")
+        return@OnCompleteListener
+      }
+      val token = task.result
+      RNEventEmitter.sendEvent(FirebaseMessagingService.deviceTokenReceived, token)
+    })
     promise.resolve(true)
   }
 
   @ReactMethod
   fun isRegisteredForRemoteNotifications(promise: Promise) {
-    promise.resolve(FirebaseMessaging.getInstance().isAutoInitEnabled)
+    FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
+      if (!task.isSuccessful) {
+        RNEventEmitter.sendEvent(FirebaseMessagingService.errorReceived, "Fetching FCM registration token failed ${task.exception?.message}")
+        promise.reject("NO_TOKEN", "No token found ${task.exception?.message}")
+        return@OnCompleteListener
+      }
+      val token = task.result
+      promise.resolve(true)
+    })
   }
 
   @ReactMethod
@@ -103,18 +120,6 @@ class PushModule(reactContext: ReactApplicationContext) :
   @ReactMethod
   fun removeListeners(type: Int?) {
     // Keep: Required for RN built in Event Emitter Calls.
-  }
-
-  @ReactMethod
-  fun testEvent(test: String) {
-    RNEventEmitter.sendEvent("notificationReceived", test)
-  }
-
-  @ReactMethod
-  fun createNotificationChannel(channelId: String,
-                                channelName: String,
-                                channelDescription: String) {
-    NotificationUtils.createNotificationChannel(reactApplicationContext, channelId, channelName, channelDescription)
   }
 
   companion object {
