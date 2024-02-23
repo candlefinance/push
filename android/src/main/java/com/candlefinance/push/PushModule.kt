@@ -56,7 +56,7 @@ class PushModule(reactContext: ReactApplicationContext) :
         ) {
           promise
             .resolve(true)
-            
+
         } else {
           val activity = reactApplicationContext.currentActivity
 
