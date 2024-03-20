@@ -16,6 +16,7 @@ export default function App() {
           console.log('opened');
           break;
         case 'foreground':
+          break;
         case 'background':
           console.log('foreground/background', data);
           const { uuid } = data;

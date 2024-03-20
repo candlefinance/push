@@ -31,7 +31,8 @@ export type NotificationReceivedData = {
   | {
       kind: 'opened';
     }
-  | { kind: 'foreground' | 'background'; uuid: string }
+  | { kind: 'background'; uuid: string }
+  | { kind: 'foreground' }
 );
 
 type DeviceTokenReceivedData = string;
