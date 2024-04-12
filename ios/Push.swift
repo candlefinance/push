@@ -137,7 +137,7 @@ extension Push {
                 }
             }
             if let emitter = shared.emitter {
-                emitter.sendEvent(withName: NotificationType.notificationReceived.rawValue, body: ["payload": payload, "uuid": uuid, "kind": "background"])
+                emitter.sendEvent(withName: NotificationType.notificationReceived.rawValue, body: ["payload": payload["payload"], "uuid": uuid, "kind": "background"])
             } else {
                 shared.logger?.track(event: "Fatal: Emitter not found. \(#function)")
             }
