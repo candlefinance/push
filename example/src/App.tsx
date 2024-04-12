@@ -1,9 +1,10 @@
 import * as React from 'react';
 
 import { StyleSheet, View, Text, Button } from 'react-native';
-import push, { type AuthorizationStatus } from '@candlefinance/push';
+import Push, { type AuthorizationStatus } from '@candlefinance/push';
 
 export default function App() {
+  const push = React.useMemo(() => new Push(), []);
   const [result, setResult] = React.useState<boolean>(false);
   const [status, setStatus] =
     React.useState<AuthorizationStatus>('notDetermined');
@@ -39,7 +40,7 @@ export default function App() {
       push.removeListener('deviceTokenReceived');
       push.removeListener('errorReceived');
     };
-  }, []);
+  }, [push]);
 
   return (
     <View style={styles.container}>

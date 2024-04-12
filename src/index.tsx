@@ -103,5 +103,4 @@ class Push {
   }
 }
 
-const push = new Push();
-export default push;
+export default Push;
