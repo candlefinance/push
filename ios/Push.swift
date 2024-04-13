@@ -123,7 +123,7 @@ extension Push {
         kind: NotificationKind
     ) {
         guard shared.isObserving else {
-            let message = "Fatal: Not observing for kind: \(kind). \(#function)"
+            let message = "Fatal: Not observing for kind: \(kind.rawValue). \(#function)"
             shared.logger?.track(event: message)
             return
         }
