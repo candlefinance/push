@@ -103,32 +103,41 @@ final public class Push: RCTEventEmitter {
     
 }
 
+enum NotificationKind {
+    case opened, foreground
+    case background((UIBackgroundFetchResult) -> Void)
+    
+    var rawValue: String {
+        switch self {
+        case .foreground: "foreground"
+        case .opened: "opened"
+        case .background: "background"
+        }
+    }
+}
+
 extension Push {
     
-    @objc func handleRemoteNotificationReceived(
+    func handleRemoteNotificationReceived(
         payload: [AnyHashable: Any],
-        kind: String,
-        completion: ((UIBackgroundFetchResult) -> Void)?
+        kind: NotificationKind
     ) {
         guard shared.isObserving else {
             let message = "Fatal: Not observing for kind: \(kind). \(#function)"
             shared.logger?.track(event: message)
             return
         }
-        if kind == "foreground" {
+        switch kind {
+        case .foreground:
             if let emitter = shared.emitter {
-                emitter.sendEvent(withName: NotificationType.notificationReceived.rawValue, body: ["payload": payload, "kind": kind])
+                emitter.sendEvent(withName: NotificationType.notificationReceived.rawValue, body: ["payload": payload, "kind": kind.rawValue])
             } else {
                 shared.logger?.track(event: "Fatal: Emitter not found for kind: \(kind). \(#function)")
             }
-        } else if kind == "background" {
-            guard let completionHandler = completion else {
-                shared.logger?.track(event: "Fatal: Completion handler not found. \(#function)")
-                return
-            }
+        case .background(let completion):
             let uuid = UUID().uuidString
             shared.notificationCallbackDictionary[uuid] = {
-                completionHandler(.newData)
+                completion(.newData)
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + 29) { [weak self] in
                 if let callback = self?.shared.notificationCallbackDictionary[uuid] {
@@ -138,21 +147,21 @@ extension Push {
                 }
             }
             if let emitter = shared.emitter {
-                emitter.sendEvent(withName: NotificationType.notificationReceived.rawValue, body: ["payload": payload, "uuid": uuid, "kind": kind])
+                emitter.sendEvent(withName: NotificationType.notificationReceived.rawValue, body: ["payload": payload, "uuid": uuid, "kind": kind.rawValue])
             } else {
-                shared.logger?.track(event: "Fatal: Emitter not found for kind: \(kind). \(#function)")
+                shared.logger?.track(event: "Fatal: Emitter not found for kind: \(kind.rawValue). \(#function)")
             }
-        } else if kind == "opened" {
+        case .opened:
             if let emitter = shared.emitter {
-                emitter.sendEvent(withName: NotificationType.notificationReceived.rawValue, body: ["payload": payload, "kind": kind])
+                emitter.sendEvent(withName: NotificationType.notificationReceived.rawValue, body: ["payload": payload, "kind": kind.rawValue])
             } else {
-                shared.logger?.track(event: "Fatal: Emitter not found for kind: \(kind). \(#function)")
+                shared.logger?.track(event: "Fatal: Emitter not found for kind: \(kind.rawValue). \(#function)")
             }
         }
         
     }
     
-    @objc func handleRemoteNotificationsRegistered(deviceToken: String) {
+   func handleRemoteNotificationsRegistered(deviceToken: String) {
         if let emitter = shared.emitter {
             emitter.sendEvent(withName: NotificationType.deviceTokenReceived.rawValue, body: deviceToken)
         } else {
@@ -160,7 +169,7 @@ extension Push {
         }
     }
     
-    @objc func handleRemoteNotificationRegistrationError(error: String) {
+    func handleRemoteNotificationRegistrationError(error: String) {
         if let emitter = shared.emitter {
             emitter.sendEvent(withName: NotificationType.errorReceived.rawValue, body: error)
         } else {
@@ -177,7 +186,7 @@ extension Push: UNUserNotificationCenterDelegate {
             return String(format: "%02x", data)
         }
         let token = tokenParts.joined()
-        shared.logger?.track(event: "Device token received \(#function).")
+        shared.logger?.track(event: "Device token received: \(token)")
         handleRemoteNotificationsRegistered(deviceToken: token)
     }
     
@@ -187,19 +196,18 @@ extension Push: UNUserNotificationCenterDelegate {
     }
     
     public func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
-        handleRemoteNotificationReceived(payload: notification.request.content.userInfo, kind: "foreground", completion: nil)
+        handleRemoteNotificationReceived(payload: notification.request.content.userInfo, kind: .foreground)
         completionHandler([.banner, .sound, .badge, .list])
     }
     
     public func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
-        handleRemoteNotificationReceived(payload: response.notification.request.content.userInfo, kind: "opened", completion: nil)
+        handleRemoteNotificationReceived(payload: response.notification.request.content.userInfo, kind: .opened)
     }
     
     public func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
         handleRemoteNotificationReceived(
             payload: userInfo,
-            kind: "background",
-            completion: completionHandler
+            kind: .background(completionHandler)
         )
     }
     
