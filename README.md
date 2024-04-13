@@ -69,7 +69,10 @@ Android support is coming soon. Check out [#1](https://github.com/candlefinance/
 The following code is used to handle push notifications on the React Native side:
 
 ```js
-import push from '@candlefinance/push';
+import Push from '@candlefinance/push';
+
+// Init
+const push = useMemo(() => new Push(), [])
 
 // Shows dialog to request permission to send push notifications, gets APNS token
 const isGranted = await push.requestPermissions();
