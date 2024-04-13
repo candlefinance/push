@@ -14,12 +14,18 @@ public protocol Logger {
     func track(event: String)
 }
 
+struct NotificationPayload {
+    let kind: NotificationKind
+    let userInfo: [AnyHashable: Any]
+}
+
 public class SharedPush: NSObject {
     static var sharedInstance: SharedPush = .init()
     var isObserving: Bool = false
     var notificationCallbackDictionary: [String: () -> Void] = [:]
     public var emitter: RCTEventEmitter?
     public var logger: Logger?
+    var queue: [NotificationPayload] = []
 }
 
 @objc(Push)
@@ -34,6 +40,10 @@ final public class Push: RCTEventEmitter {
     @objc public override func startObserving() {
         super.startObserving()
         shared.isObserving = true
+        if !shared.queue.isEmpty {
+            shared.queue.forEach(handleRemoteNotificationReceived(payload:))
+            shared.queue.removeAll()
+        }
         shared.logger?.track(event: #function)
     }
     
@@ -119,18 +129,21 @@ enum NotificationKind {
 extension Push {
     
     func handleRemoteNotificationReceived(
-        payload: [AnyHashable: Any],
-        kind: NotificationKind
+        payload: NotificationPayload
     ) {
         guard shared.isObserving else {
-            let message = "Fatal: Not observing for kind: \(kind.rawValue). \(#function)"
+            let message = "Warning: Not observing for kind: \(payload.kind.rawValue). \(#function). Adding to the queue."
+            shared.queue.append(payload)
             shared.logger?.track(event: message)
             return
         }
+        let kind = payload.kind
+        let userInfo = payload.userInfo
+
         switch kind {
         case .foreground:
             if let emitter = shared.emitter {
-                emitter.sendEvent(withName: NotificationType.notificationReceived.rawValue, body: ["payload": payload, "kind": kind.rawValue])
+                emitter.sendEvent(withName: NotificationType.notificationReceived.rawValue, body: ["payload": userInfo, "kind": kind.rawValue])
             } else {
                 shared.logger?.track(event: "Fatal: Emitter not found for kind: \(kind). \(#function)")
             }
@@ -147,13 +160,13 @@ extension Push {
                 }
             }
             if let emitter = shared.emitter {
-                emitter.sendEvent(withName: NotificationType.notificationReceived.rawValue, body: ["payload": payload, "uuid": uuid, "kind": kind.rawValue])
+                emitter.sendEvent(withName: NotificationType.notificationReceived.rawValue, body: ["payload": userInfo, "uuid": uuid, "kind": kind.rawValue])
             } else {
                 shared.logger?.track(event: "Fatal: Emitter not found for kind: \(kind.rawValue). \(#function)")
             }
         case .opened:
             if let emitter = shared.emitter {
-                emitter.sendEvent(withName: NotificationType.notificationReceived.rawValue, body: ["payload": payload, "kind": kind.rawValue])
+                emitter.sendEvent(withName: NotificationType.notificationReceived.rawValue, body: ["payload": userInfo, "kind": kind.rawValue])
             } else {
                 shared.logger?.track(event: "Fatal: Emitter not found for kind: \(kind.rawValue). \(#function)")
             }
@@ -161,7 +174,7 @@ extension Push {
         
     }
     
-   func handleRemoteNotificationsRegistered(deviceToken: String) {
+    func handleRemoteNotificationsRegistered(deviceToken: String) {
         if let emitter = shared.emitter {
             emitter.sendEvent(withName: NotificationType.deviceTokenReceived.rawValue, body: deviceToken)
         } else {
@@ -196,18 +209,23 @@ extension Push: UNUserNotificationCenterDelegate {
     }
     
     public func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
-        handleRemoteNotificationReceived(payload: notification.request.content.userInfo, kind: .foreground)
+        handleRemoteNotificationReceived(payload: .init(kind: .foreground, userInfo: notification.request.content.userInfo))
         completionHandler([.banner, .sound, .badge, .list])
     }
     
     public func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
-        handleRemoteNotificationReceived(payload: response.notification.request.content.userInfo, kind: .opened)
+        handleRemoteNotificationReceived(
+            payload: .init(kind: .opened,
+                           userInfo: response.notification.request.content.userInfo)
+        )
     }
     
     public func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
-        handleRemoteNotificationReceived(
-            payload: userInfo,
-            kind: .background(completionHandler)
+        handleRemoteNotificationReceived(payload:
+                .init(
+                    kind: .background(completionHandler),
+                    userInfo: userInfo
+                )
         )
     }
     
