@@ -177,7 +177,7 @@ extension Push: UNUserNotificationCenterDelegate {
             return String(format: "%02x", data)
         }
         let token = tokenParts.joined()
-        shared.logger?.track(event: "Device token received: \(token)")
+        shared.logger?.track(event: "Device token received \(#function).")
         handleRemoteNotificationsRegistered(deviceToken: token)
     }
     
