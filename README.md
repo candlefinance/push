@@ -26,9 +26,9 @@
 yarn add @candlefinance/push
 ```
 
-The motivation to write this came from the unmaintained and outdatated libraries that exist today. This implementation is written in Swift in less than 200 lines of code.
+The motivation to write this came from the unmaintained and outdated libraries that exist today. This implementation is written in Swift in less than 200 lines of code.
 
-Andriod support is coming soon. Checkout [#1](https://github.com/candlefinance/push/issues/1) if you want to help.
+Android support is coming soon. Check out [#1](https://github.com/candlefinance/push/issues/1) if you want to help.
 
 ## Usage
 
@@ -45,7 +45,7 @@ Andriod support is coming soon. Checkout [#1](https://github.com/candlefinance/p
 #### Setup
 
 1. You'll need to update your `AppDelegate.swift` to handle push check the example app [here](./example/ios/AppDelegate.swift) for an example.
-2. If your AppDelegate is in Objective-C (`.mm|.m|.h`), create a new `AppDelegate.swift` file and bridging header then delete the Objective-C AppDelegate and main.m file. Finally copy the contents of the example app's [AppDelegate.swift](./example/ios/AppDelegate.swift) and [bridge header](./example/ios/PushExample-Bridging-Header.h) to your project.
+2. If your AppDelegate is in Objective-C (`.mm|.m|.h`), create a new `AppDelegate.swift` file and bridging header, then delete the Objective-C AppDelegate and main.m file. Finally, copy the contents of the example app's [AppDelegate.swift](./example/ios/AppDelegate.swift) and [bridge header](./example/ios/PushExample-Bridging-Header.h) to your project.
 3. Make sure you're on `iOS 15` or later.
 
 ### Android
