@@ -10,13 +10,13 @@ private let expectedEventNames: Set<String> = [
 ]
 
 @objc(Push)
-final public class Push: RCTEventEmitter {
+final class Push: RCTEventEmitter {
     var registeredEventNames: Set<String> = []
     var hasListeners = false
     private let sharedNotificationManager: PushNotificationManager
     
     // Override the bridge setter and getter to capture the launch options
-    public override var bridge: RCTBridge! {
+    override var bridge: RCTBridge! {
         set(bridge) {
             super.bridge = bridge
             
@@ -51,7 +51,7 @@ final public class Push: RCTEventEmitter {
         }
     }
     
-    public override func supportedEvents() -> [String]! {
+    override func supportedEvents() -> [String]! {
         return Array(expectedEventNames)
     }
     
@@ -108,12 +108,12 @@ final public class Push: RCTEventEmitter {
     
     
     @objc
-    public override static func requiresMainQueueSetup() -> Bool {
+    override static func requiresMainQueueSetup() -> Bool {
         return true
     }
     
     @objc
-    public override func constantsToExport() -> [AnyHashable : Any]! {
+    override func constantsToExport() -> [AnyHashable : Any]! {
         return [
             "NativeEvent": [
                 NativeEvent.backgroundMessageReceived.key: NativeEvent.backgroundMessageReceived.name,

@@ -8,7 +8,6 @@ function isEmpty(obj: Record<string, unknown>): boolean {
 import type {
   ApnsMessage,
   FcmMessage,
-  NativeAction,
   NativeMessage,
   NormalizedValues,
   PushNotificationMessage,
@@ -28,53 +27,30 @@ export const normalizeNativeMessage = (
   } else {
     return null;
   }
-  const { body, imageUrl, title, action, options, data } = normalized;
+  const { body, imageUrl, title, options, data } = normalized;
 
   return {
     body,
     data,
     imageUrl,
     title,
-    ...action,
     ...options,
   };
 };
 
 const normalizeApnsMessage = (apnsMessage: ApnsMessage): NormalizedValues => {
-  const { aps, data } = apnsMessage;
+  const { aps, data, custom } = apnsMessage;
   const { body, title } = aps.alert ?? {};
-  const action = getApnsAction(data?.pinpoint) ?? {};
-  const imageUrl = data?.['media-url'];
   const options = getApnsOptions(apnsMessage);
 
-  return { body, imageUrl, title, action, options, data };
+  return { body, title, options, data, custom };
 };
 
 const normalizeFcmMessage = (fcmMessage: FcmMessage): NormalizedValues => {
-  const { body, imageUrl, rawData: data, title } = fcmMessage;
-  const action = getFcmAction(fcmMessage.action) ?? {};
+  const { body, imageUrl, rawData: data, title, subtitle, custom } = fcmMessage;
   const options = getFcmOptions(fcmMessage);
 
-  return { body, imageUrl, title, action, options, data };
-};
-
-const getApnsAction = (
-  action?: NativeAction
-): Pick<PushNotificationMessage, 'deeplinkUrl'> | undefined => {
-  if (action?.deeplink) {
-    return { deeplinkUrl: action.deeplink };
-  }
-};
-
-const getFcmAction = (
-  action?: NativeAction
-): Pick<PushNotificationMessage, 'goToUrl' | 'deeplinkUrl'> | undefined => {
-  if (action?.url) {
-    return { goToUrl: action.url };
-  }
-  if (action?.deeplink) {
-    return { deeplinkUrl: action.deeplink };
-  }
+  return { body, imageUrl, title, options, data, custom, subtitle };
 };
 
 const getApnsOptions = ({

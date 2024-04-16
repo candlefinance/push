@@ -43,22 +43,29 @@ export interface NormalizedValues {
   body?: string;
   imageUrl?: string;
   title?: string;
-  action?: Pick<PushNotificationMessage, 'goToUrl' | 'deeplinkUrl'>;
+  subtitle?: string;
   options?: Pick<PushNotificationMessage, 'apnsOptions' | 'fcmOptions'>;
   data?: Record<string, unknown>;
+  custom?: any;
 }
 
 // iOS
 export interface ApnsMessage {
   aps: {
-    alert?: {
-      body?: string;
+    'alert'?: {
       title?: string;
+      body?: string;
       subtitle?: string;
     };
+    'sound'?: string;
+    'badge'?: number;
+    'content-available'?: number;
+    'category'?: string;
   };
+  custom?: any;
   rawData?: never;
   completionHandlerId?: string;
+  data?: Record<string, unknown>;
 }
 
 export type IosPermissionStatus = 'NotDetermined' | 'Authorized' | 'Denied';
@@ -71,11 +78,13 @@ export interface FcmMessage {
   imageUrl?: string;
   rawData?: Record<string, unknown>;
   title?: string;
+  subtitle?: string;
   channelId?: string;
   messageId?: string;
   senderId?: string;
   sendTime?: number;
   completionHandlerId?: never;
+  custom?: any;
 }
 
 export type AndroidPermissionStatus =
