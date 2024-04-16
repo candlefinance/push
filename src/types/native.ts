@@ -24,6 +24,7 @@ export interface PushNotificationNativeModule extends NativeModule {
   requestPermissions(
     permissions: PushNotificationPermissions
   ): Promise<boolean>;
+  registerForToken: () => void;
 }
 
 export interface NativeAction {

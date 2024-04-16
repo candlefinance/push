@@ -1,6 +1,6 @@
 PODS:
   - boost (1.83.0)
-  - candlefinance-push (0.4.1):
+  - candlefinance-push (0.4.7):
     - glog
     - RCT-Folly (= 2022.05.16.00)
     - React-Core
@@ -1179,7 +1179,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   boost: d3f49c53809116a5d38da093a8aa78bf551aed09
-  candlefinance-push: 1519da157c7caa87d313bbe1ec4c66920ee5109e
+  candlefinance-push: 3f2fb5a74ce8a54754c8c4c6fb4714c460ffde15
   DoubleConversion: fea03f2699887d960129cc54bba7e52542b6f953
   FBLazyVector: 84f6edbe225f38aebd9deaf1540a4160b1f087d7
   FBReactNativeSpec: d0086a479be91c44ce4687a962956a352d2dc697

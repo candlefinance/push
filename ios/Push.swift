@@ -94,15 +94,14 @@ final class Push: RCTEventEmitter {
     }
     
     @objc
-    func onFinish(uuid: String) {
-        sharedNotificationManager.completeNotification(uuid)
+    func completeNotification(_ completionHandlerId: String) {
+        sharedNotificationManager.completeNotification(completionHandlerId)
     }
     
-    @objc(registerForToken:withRejecter:)
-    func registerForToken(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+    @objc
+    func registerForToken() {
         DispatchQueue.main.async {
             UIApplication.shared.registerForRemoteNotifications()
-            resolve(true)
         }
     }
     

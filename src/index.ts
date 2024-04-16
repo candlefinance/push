@@ -9,6 +9,7 @@ import {
   registerHeadlessTask,
   requestPermissions,
   setBadgeCount,
+  registerForToken,
 } from './apis';
 
 export type {
@@ -28,6 +29,7 @@ const module = {
   registerHeadlessTask,
   requestPermissions,
   setBadgeCount,
+  registerForToken,
 };
 
 export type PushNotificationModule = typeof module;
