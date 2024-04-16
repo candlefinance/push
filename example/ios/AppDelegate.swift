@@ -13,10 +13,6 @@ import NotificationCenter // 1
 
 @UIApplicationMain
 class AppDelegate: RCTAppDelegate {
-  
-  // 2
-  let push = Push()
-  
   var isDarkMode: Bool {
     return UITraitCollection.current.userInterfaceStyle == .dark
   }
@@ -45,23 +41,15 @@ class AppDelegate: RCTAppDelegate {
 extension AppDelegate: UNUserNotificationCenterDelegate {
   
   override func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
-    push.application(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
+    PushNotificationAppDelegateHelper.didRegisterForRemoteNotificationsWithDeviceToken(deviceToken)
   }
   
-  override func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
-    push.application(application, didFailToRegisterForRemoteNotificationsWithError: error)
-  }
-  
-  public func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
-    push.userNotificationCenter(center, willPresent: notification, withCompletionHandler: completionHandler)
-  }
-  
-  public func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
-    await push.userNotificationCenter(center, didReceive: response)
+  override func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: any Error) {
+    PushNotificationAppDelegateHelper.didFailToRegisterForRemoteNotificationsWithError(error)
   }
   
   override func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
-    push.application(application, didReceiveRemoteNotification: userInfo, fetchCompletionHandler: completionHandler)
+    PushNotificationAppDelegateHelper.didReceiveRemoteNotification(userInfo: userInfo, completionHandler: completionHandler)
   }
 
 }
