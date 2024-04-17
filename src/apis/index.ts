@@ -10,3 +10,4 @@ export { requestPermissions } from './requestPermissions';
 export { setBadgeCount } from './setBadgeCount';
 export { registerForToken } from './registerForToken';
 export { removeListeners } from './removeListeners';
+export { addErrorListener } from './addErrorListener';

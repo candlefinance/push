@@ -14,6 +14,7 @@ export interface PushNotificationNativeModule extends NativeModule {
       LAUNCH_NOTIFICATION_OPENED: string;
       NOTIFICATION_OPENED: string;
       TOKEN_RECEIVED: string;
+      FAILED_TO_REGISTER: string;
     };
     NativeHeadlessTaskKey?: string;
   };

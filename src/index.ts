@@ -1,6 +1,7 @@
 import {
   addMessageEventListener,
   addTokenEventListener,
+  addErrorListener,
   completeNotification,
   getBadgeCount,
   getConstants,
@@ -32,6 +33,7 @@ const module = {
   setBadgeCount,
   registerForToken,
   removeListeners,
+  addErrorListener,
 };
 
 export type PushNotificationModule = typeof module;

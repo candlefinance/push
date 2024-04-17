@@ -6,7 +6,7 @@
     },
     "content-available": 1
   },
-  "custom": {
+  "data": {
     "key1": "value1",
     "key2": "value2"
   }

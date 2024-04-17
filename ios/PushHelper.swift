@@ -23,6 +23,7 @@ extension UNAuthorizationStatus {
 
 enum NativeEvent {
     case tokenReceived
+    case failedToRegister
     case notificationOpened
     case launchNotificationOpened
     case backgroundMessageReceived
@@ -40,6 +41,8 @@ enum NativeEvent {
             return "BACKGROUND_MESSAGE_RECEIVED"
         case .foregroundMessageReceived:
             return "FOREGROUND_MESSAGE_RECEIVED"
+        case .failedToRegister:
+            return "FAILED_TO_REGISTER"
         }
     }
 
@@ -55,6 +58,8 @@ enum NativeEvent {
             return "ForegroundMessageReceived"
         case .backgroundMessageReceived:
             return "BackgroundMessageReceived"
+        case .failedToRegister:
+            return "FailedToRegister"
         }
     }
 }
@@ -224,7 +229,9 @@ final class PushNotificationManager {
     }
 
     func didFailToRegisterForRemoteNotificationsWithError(error: Error) {
-        print("Register for remote notifications failed due to \(error).")
+        sharedEventManager.sendEventToJS(
+            PushEvent(type: NativeEvent.failedToRegister, payload: ["message": error.localizedDescription])
+        )
     }
 
     func didReceiveRemoteNotification(
@@ -321,7 +328,6 @@ final class PushNotificationManager {
 
     @objc
     private func applicationDidBecomeActive() {
-//        registerForRemoteNotifications()
     }
 
     @objc

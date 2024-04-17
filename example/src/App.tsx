@@ -30,6 +30,9 @@ export default function App() {
         }
       }
     );
+    Push.addErrorListener(NativeEvent.FAILED_TO_REGISTER, (message) => {
+      console.log('FAILED_TO_REGISTER:', message);
+    });
     Push.addMessageEventListener(NativeEvent.NOTIFICATION_OPENED, (message) => {
       console.log('NOTIFICATION_OPENED:', message);
     });

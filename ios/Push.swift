@@ -6,7 +6,8 @@ private let expectedEventNames: Set<String> = [
     NativeEvent.backgroundMessageReceived.name,
     NativeEvent.foregroundMessageReceived.name,
     NativeEvent.notificationOpened.name,
-    NativeEvent.launchNotificationOpened.name
+    NativeEvent.launchNotificationOpened.name,
+    NativeEvent.failedToRegister.name
 ]
 
 @objc(Push)
@@ -120,6 +121,7 @@ final class Push: RCTEventEmitter {
                 NativeEvent.notificationOpened.key: NativeEvent.notificationOpened.name,
                 NativeEvent.launchNotificationOpened.key: NativeEvent.launchNotificationOpened.name,
                 NativeEvent.tokenReceived.key: NativeEvent.tokenReceived.name,
+                NativeEvent.failedToRegister.key: NativeEvent.failedToRegister.name,
             ],
         ]
     }
