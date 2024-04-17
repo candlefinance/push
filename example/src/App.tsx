@@ -1,12 +1,23 @@
 import * as React from 'react';
 
 import { StyleSheet, View, Text, Button } from 'react-native';
-// import type { PushNotificationPermissionStatus } from '@candlefinance/push';
+import type { PushNotificationPermissionStatus } from '@candlefinance/push';
+import { module as Push } from '@candlefinance/push';
 
 export default function App() {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Authorization Status:</Text>
+      <Text style={styles.text}>Authorization Status</Text>
+      <Button
+        title="Request Permissions"
+        onPress={() => {
+          Push.getPermissionStatus().then(
+            (status: PushNotificationPermissionStatus) => {
+              console.log(status);
+            }
+          );
+        }}
+      />
     </View>
   );
 }
