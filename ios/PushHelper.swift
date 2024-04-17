@@ -321,7 +321,7 @@ final class PushNotificationManager {
 
     @objc
     private func applicationDidBecomeActive() {
-        registerForRemoteNotifications()
+//        registerForRemoteNotifications()
     }
 
     @objc

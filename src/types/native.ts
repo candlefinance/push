@@ -9,7 +9,7 @@ export interface PushNotificationNativeModule extends NativeModule {
   completeNotification?(completionHandlerId: string): void;
   getConstants(): {
     NativeEvent: {
-      BACKGROUND_MESSAGE_RECEIVED?: string;
+      BACKGROUND_MESSAGE_RECEIVED: string;
       FOREGROUND_MESSAGE_RECEIVED: string;
       LAUNCH_NOTIFICATION_OPENED: string;
       NOTIFICATION_OPENED: string;

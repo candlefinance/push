@@ -9,3 +9,4 @@ export { registerHeadlessTask } from './registerHeadlessTask';
 export { requestPermissions } from './requestPermissions';
 export { setBadgeCount } from './setBadgeCount';
 export { registerForToken } from './registerForToken';
+export { removeListeners } from './removeListeners';

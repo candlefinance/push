@@ -14,13 +14,13 @@ export interface PushNotificationMessage {
   fcmOptions?: FcmPlatformOptions;
   apnsOptions?: ApnsPlatformOptions;
   data?: Record<string, unknown>;
+  custom?: any;
 }
 
 export type PushNotificationPermissionStatus =
   | 'denied'
   | 'granted'
-  | 'shouldRequest'
-  | 'shouldExplainThenRequest';
+  | 'notDetermined';
 
 interface ApnsPlatformOptions {
   subtitle?: string;

@@ -10,6 +10,7 @@ import {
   requestPermissions,
   setBadgeCount,
   registerForToken,
+  removeListeners,
 } from './apis';
 
 export type {
@@ -30,6 +31,7 @@ const module = {
   requestPermissions,
   setBadgeCount,
   registerForToken,
+  removeListeners,
 };
 
 export type PushNotificationModule = typeof module;

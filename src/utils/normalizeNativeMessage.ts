@@ -27,13 +27,14 @@ export const normalizeNativeMessage = (
   } else {
     return null;
   }
-  const { body, imageUrl, title, options, data } = normalized;
+  const { body, imageUrl, title, options, data, custom } = normalized;
 
   return {
     body,
     data,
     imageUrl,
     title,
+    custom,
     ...options,
   };
 };
@@ -43,7 +44,7 @@ const normalizeApnsMessage = (apnsMessage: ApnsMessage): NormalizedValues => {
   const { body, title } = aps.alert ?? {};
   const options = getApnsOptions(apnsMessage);
 
-  return { body, title, options, data, custom };
+  return { body, title, options, data, custom: custom };
 };
 
 const normalizeFcmMessage = (fcmMessage: FcmMessage): NormalizedValues => {
