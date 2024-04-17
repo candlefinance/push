@@ -4,6 +4,7 @@ import type { NativeMessage, PushNotificationMessage } from '../types';
 import { normalizeNativeMessage } from '../utils';
 
 import { getConstants } from './getConstants';
+import { completeNotification } from './completeNotification';
 
 export const registerHeadlessTask = (
   task: (message: PushNotificationMessage | null) => Promise<void>
@@ -14,6 +15,9 @@ export const registerHeadlessTask = (
       NativeHeadlessTaskKey,
       () => async (nativeMessage: NativeMessage) => {
         await task(normalizeNativeMessage(nativeMessage));
+        if (nativeMessage.completionHandlerId) {
+          completeNotification(nativeMessage.completionHandlerId);
+        }
       }
     );
   }
