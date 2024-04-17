@@ -1,82 +1,92 @@
 package com.candlefinance.push
 
+import android.content.Intent
+import android.os.Bundle
 import android.util.Log
+import com.facebook.react.HeadlessJsTaskService
+import com.facebook.react.bridge.Arguments
+import com.facebook.react.jstasks.HeadlessJsTaskConfig
 import com.google.firebase.messaging.FirebaseMessagingService
-import com.google.firebase.messaging.RemoteMessage
-import org.json.JSONObject
-import java.lang.Exception
-import java.util.UUID
+
+private val TAG = PushModule::class.java.simpleName
+class PushNotificationHeadlessTaskService : HeadlessJsTaskService() {
+
+  private val defaultTimeout: Long = 10000 // 10 seconds
+ override fun getTaskConfig(intent: Intent): HeadlessJsTaskConfig? {
+   return NotificationPayload.fromIntent(intent)?.let {
+     HeadlessJsTaskConfig(
+       HEADLESS_TASK_KEY,
+        Arguments.createMap().apply {
+          putString("content", it.rawData.toString())
+        },
+       defaultTimeout, true
+     )
+   }
+ }
+
+  companion object {
+    const val HEADLESS_TASK_KEY = "PushNotificationHeadlessTaskKey"
+  }
+}
 
 class FirebaseMessagingService : FirebaseMessagingService() {
 
-  override fun onSendError(msgId: String, exception: Exception) {
-    super.onSendError(msgId, exception)
-    RNEventEmitter.sendEvent(errorReceived, exception.message)
-  }
+  private lateinit var utils: PushNotificationUtils
 
-  override fun onMessageReceived(remoteMessage: RemoteMessage) {
-    val title = remoteMessage.notification?.title.toString()
-    val body = remoteMessage.notification?.body.toString()
-
-    val formattedData = JSONObject()
-
-    val apsData = JSONObject()
-    apsData.put("alert", JSONObject().apply {
-        put("title", title)
-        put("body", body)
-    })
-    formattedData.put("payload", JSONObject().apply {
-        put("aps", apsData)
-        put("custom", JSONObject(mapToString(remoteMessage.data)))
-    })
-
-    formattedData.put("kind", getAppState())
-    formattedData.put("uuid", UUID.randomUUID().toString())
-
-    // Send the event
-    RNEventEmitter.sendEvent(notificationReceived, formattedData.toString())
-    ContextHolder.getInstance().getApplicationContext()?.let {
-      NotificationUtils
-        .sendNotification(
-          it, title, body
-        )
-    }
-    if (remoteMessage.data.isNotEmpty()) {
-      Log.d(TAG, "Message data payload: ${remoteMessage.data}")
-    }
-    remoteMessage.notification?.let {
-      Log.d(TAG, "Message Notification Body: ${it.body}")
-    }
-  }
-
-  private fun mapToString(map: Map<String, String>): String {
-    val json = JSONObject()
-    for ((key, value) in map) {
-      json.put(key, value)
-    }
-    return json.toString()
-  }
-
-  // TODO: make this actually work
-  private fun getAppState(): String {
-    val reactContext = ContextHolder.getInstance().getApplicationContext()
-    val currentActivity = reactContext?.currentActivity
-    return if (currentActivity == null) {
-      "background"
-    } else {
-      "foreground"
-    }
+  override fun onCreate() {
+    super.onCreate()
+    utils = PushNotificationUtils(baseContext)
   }
 
   override fun onNewToken(token: String) {
-    Log.d(TAG,token)
-    RNEventEmitter.sendEvent(deviceTokenReceived, token)
+    super.onNewToken(token)
+    val params = Arguments.createMap()
+    params.putString("token", token)
+    Log.d(TAG, "Send device token event")
+    PushNotificationEventManager.sendEvent(PushNotificationEventType.TOKEN_RECEIVED, params)
   }
 
-  companion object {
-    private const val TAG = "MyFirebaseMsgService"
-    const val notificationReceived = "notificationReceived"
-    const val deviceTokenReceived = "deviceTokenReceived"
-    const val errorReceived = "errorReceived"
+  override fun handleIntent(intent: Intent) {
+    val extras = intent.extras ?: Bundle()
+    extras.getString("gcm.notification.body")?.let {
+    // Use the notification body here
+      // message contains push notification payload, show notification
+//      onMessageReceived(it)
+      Log.d(TAG, "**** Message: ${it}")
+    } ?: run {
+      Log.d(TAG, "Ignore intents that don't contain push notification payload")
+      super.handleIntent(intent)
+    }
   }
+
+  private fun onMessageReceived(payload: NotificationPayload) {
+    if (utils.isAppInForeground()) {
+      Log.d(TAG, "Send foreground message received event")
+      PushNotificationEventManager.sendEvent(
+        PushNotificationEventType.FOREGROUND_MESSAGE_RECEIVED, Arguments.createMap().apply {
+          putString("content", payload.rawData.toString())
+        }
+      )
+    } else {
+      Log.d(
+        TAG, "App is in background, try to create notification and start headless service"
+      )
+
+      utils.showNotification(payload)
+
+      try {
+        val serviceIntent =
+          Intent(baseContext, PushNotificationHeadlessTaskService::class.java)
+        serviceIntent.putExtra("NotificationPayload", payload)
+        if (baseContext.startService(serviceIntent) != null) {
+          HeadlessJsTaskService.acquireWakeLockNow(baseContext)
+        }
+      } catch (exception: Exception) {
+        Log.e(
+          TAG, "Something went wrong while starting headless task: ${exception.message}"
+        )
+      }
+    }
+  }
+
 }
