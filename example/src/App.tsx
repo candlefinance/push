@@ -49,13 +49,11 @@ export default function App() {
       }
     );
     return () => {
-      if (Platform.OS === 'ios') {
-        Push.removeListeners(NativeEvent.TOKEN_RECEIVED);
-        Push.removeListeners(NativeEvent.BACKGROUND_MESSAGE_RECEIVED);
-        Push.removeListeners(NativeEvent.NOTIFICATION_OPENED);
-        Push.removeListeners(NativeEvent.FOREGROUND_MESSAGE_RECEIVED);
-        Push.removeListeners(NativeEvent.LAUNCH_NOTIFICATION_OPENED);
-      }
+      Push.removeListeners(NativeEvent.TOKEN_RECEIVED);
+      Push.removeListeners(NativeEvent.BACKGROUND_MESSAGE_RECEIVED);
+      Push.removeListeners(NativeEvent.NOTIFICATION_OPENED);
+      Push.removeListeners(NativeEvent.FOREGROUND_MESSAGE_RECEIVED);
+      Push.removeListeners(NativeEvent.LAUNCH_NOTIFICATION_OPENED);
     };
   }, [isGranted]);
 

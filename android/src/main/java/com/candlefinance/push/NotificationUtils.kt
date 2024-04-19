@@ -21,6 +21,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.OnLifecycleEvent
+import androidx.lifecycle.ProcessLifecycleOwner
 import com.facebook.react.HeadlessJsTaskService
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.WritableMap
@@ -38,6 +39,7 @@ class PushNotificationsConstants {
     const val URL = "url" // url
     const val DEEPLINK = "deeplink" // deeplink
     const val TITLE = "title" // title
+    const val BODY = "body" // body
     const val IMAGEURL = "imageUrl" // imageUrl
     const val DEFAULT_NOTIFICATION_CHANNEL_ID = "default_notification_channel_id" // default_notification_channel_id
   }
@@ -106,6 +108,7 @@ class PushNotificationsUtils(
       notificationBuilder
               .setSmallIcon(getResourceIdByName("ic_default_notification", "drawable"))
               .setContentTitle(notificationContent[PushNotificationsConstants.TITLE])
+              .setContentText(notificationContent[PushNotificationsConstants.BODY])
               .setAutoCancel(true)
               .setPriority(NotificationCompat.PRIORITY_DEFAULT)
 
@@ -114,9 +117,17 @@ class PushNotificationsUtils(
         Log.d("PushNotificationsUtils", "targetClass is not null")
         val intent = Intent(context, targetClass).apply {
           flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+          val url = notificationContent[PushNotificationsConstants.URL]
+          val deepLink = notificationContent[PushNotificationsConstants.DEEPLINK]
+
+          if (url != null) {
+            putExtra(PushNotificationsConstants.URL, url)
+          }
+
+          if (deepLink != null) {
+            putExtra(PushNotificationsConstants.DEEPLINK, deepLink)
+          }
           putExtra(PushNotificationsConstants.OPENAPP, true)
-          putExtra(PushNotificationsConstants.URL, notificationContent[PushNotificationsConstants.URL])
-          putExtra(PushNotificationsConstants.DEEPLINK, notificationContent[PushNotificationsConstants.DEEPLINK])
         }
 
         notificationBuilder.setContentIntent(
@@ -168,7 +179,18 @@ class PushNotificationUtils(context: Context) {
         Log.d("PushNotificationUtils", "Show notification with payload: $payload")
 
         val notificationId = (System.currentTimeMillis() % Int.MAX_VALUE).toInt()
-        utils.showNotification(notificationId, payload, payload.targetClass)
+        val targetClass = payload.rawData["targetClass"]?.let {
+          Log.d("PushNotificationUtils", "targetClass: $it")
+          try {
+            Class.forName(it)
+          } catch (e: ClassNotFoundException) {
+            Log.e("PushNotificationUtils", "Class not found: $it")
+            null
+          }
+        }
+        if (targetClass != null) {
+          utils.showNotification(notificationId, payload, targetClass)
+        }
     }
 
     fun isAppInForeground(): Boolean {
@@ -205,6 +227,8 @@ open class NotificationPayload(
 
   fun toWritableMap(): WritableMap {
     val map = Arguments.createMap()
+    map.putMap("rawData", Arguments.makeNativeMap(rawData))
+    map.putString("channelId", channelId)
     rawData.forEach { (key, value) -> map.putString(key, value) }
     return map
   }

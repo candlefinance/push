@@ -12,6 +12,7 @@ export const addMessageEventListener = (
   ) => void
 ): EmitterSubscription =>
   nativeEventEmitter.addListener(event, (nativeMessage: NativeMessage) => {
+    console.log('nativeMessage', nativeMessage);
     listener(
       normalizeNativeMessage(nativeMessage),
       nativeMessage.completionHandlerId

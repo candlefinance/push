@@ -158,8 +158,7 @@ class PushModule(
   }
 
   override fun getConstants(): MutableMap<String, Any> = hashMapOf(
-    "NativeEvent" to PushNotificationEventType.entries
-      .associateBy({ it.name }, { it.value }),
+    "NativeEvent" to PushNotificationEventType.values().associateBy({ it.name }, { it.value }),
     "NativeHeadlessTaskKey" to PushNotificationHeadlessTaskService.HEADLESS_TASK_KEY
   )
 
@@ -171,6 +170,7 @@ class PushModule(
    * Send notification opened app event to JS layer if the app is in a background state
    */
   override fun onNewIntent(intent: Intent) {
+    Log.d(TAG, "New intent received")
     val payload = NotificationPayload.fromIntent(intent)
     if (payload != null) {
       PushNotificationEventManager.sendEvent(
@@ -184,6 +184,7 @@ class PushModule(
    * store the app launching notification if app is in a quit state
    */
   override fun onHostResume() {
+    Log.d(TAG, "App resumed")
     if (isAppLaunch) {
       isAppLaunch = false
       PushNotificationEventManager.init(reactApplicationContext)
@@ -215,6 +216,7 @@ class PushModule(
       }
     } else {
       // Wipe the launching notification as app was re-opened by some other means
+      Log.d(TAG, "Wipe launching notification")
       launchNotification = null
     }
   }
@@ -271,9 +273,9 @@ class PushNotificationPermission(private val context: Context) {
         // Request the permission
         Log.d(TAG, "Requesting notification permission on Android 12 or higher")
         ActivityCompat.requestPermissions(
-                context,
-                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-                requestId.hashCode()
+          context,
+          arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+          Math.abs(requestId.hashCode())
         )
         Log.d(TAG, "Requesting notification permission on Android 12 or higher")
       }

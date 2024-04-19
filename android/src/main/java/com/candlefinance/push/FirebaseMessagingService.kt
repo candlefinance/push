@@ -85,9 +85,6 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         }
       } catch (exception: Exception) {
         Log.e(TAG, "Something went wrong while starting headless task: ${exception.message}")
-        PushNotificationEventManager.sendEvent(
-                PushNotificationEventType.BACKGROUND_MESSAGE_RECEIVED, payload.toWritableMap()
-        )
       }
     }
   }
