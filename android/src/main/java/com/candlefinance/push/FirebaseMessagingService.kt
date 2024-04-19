@@ -14,11 +14,10 @@ class PushNotificationHeadlessTaskService : HeadlessJsTaskService() {
   private val defaultTimeout: Long = 10000 // 10 seconds
  override fun getTaskConfig(intent: Intent): HeadlessJsTaskConfig? {
    return NotificationPayload.fromIntent(intent)?.let {
+     Log.d(TAG, "Starting headless task with payload: $it")
      HeadlessJsTaskConfig(
        HEADLESS_TASK_KEY,
-        Arguments.createMap().apply {
-          putString("content", it.rawData.toString())
-        },
+        it.toWritableMap(),
        defaultTimeout, true
      )
    }
@@ -47,43 +46,47 @@ class FirebaseMessagingService : FirebaseMessagingService() {
   }
 
   override fun handleIntent(intent: Intent) {
-    val extras = intent.extras ?: Bundle()
-    extras.getString("gcm.notification.body")?.let {
-    // Use the notification body here
-      // message contains push notification payload, show notification
-//      onMessageReceived(it)
-      Log.d(TAG, "**** Message: ${it}")
-    } ?: run {
-      Log.d(TAG, "Ignore intents that don't contain push notification payload")
-      super.handleIntent(intent)
+    val payload = NotificationPayload.fromIntent(intent)
+    if (payload != null) {
+      onMessageReceived(payload)
+      Log.d(TAG, "Notification payload found in intent $payload")
+    } else {
+      Log.d(TAG, "No notification payload found in intent")
     }
   }
 
   private fun onMessageReceived(payload: NotificationPayload) {
+    Log.d(TAG, "Received new message: $payload")
     if (utils.isAppInForeground()) {
-      Log.d(TAG, "Send foreground message received event")
+      Log.d(TAG, "Send foreground message received event with payload: $payload")
       PushNotificationEventManager.sendEvent(
-        PushNotificationEventType.FOREGROUND_MESSAGE_RECEIVED, Arguments.createMap().apply {
-          putString("content", payload.rawData.toString())
-        }
+              PushNotificationEventType.FOREGROUND_MESSAGE_RECEIVED, payload.toWritableMap()
       )
+    } else if (utils.isAppInBackground()) {
+      Log.d(TAG, "App is in background but in memory, send background message received event with payload: $payload")
+      PushNotificationEventManager.sendEvent(
+              PushNotificationEventType.BACKGROUND_MESSAGE_RECEIVED, payload.toWritableMap()
+      )
+      utils.showNotification(payload)
     } else {
-      Log.d(
-        TAG, "App is in background, try to create notification and start headless service"
-      )
-
+      Log.d(TAG, "App is killed, start HeadlessJsTaskService with payload: $payload")
       utils.showNotification(payload)
 
       try {
-        val serviceIntent =
-          Intent(baseContext, PushNotificationHeadlessTaskService::class.java)
+        val serviceIntent = Intent(baseContext, PushNotificationHeadlessTaskService::class.java)
         serviceIntent.putExtra("NotificationPayload", payload)
         if (baseContext.startService(serviceIntent) != null) {
           HeadlessJsTaskService.acquireWakeLockNow(baseContext)
+        } else {
+          Log.e(TAG, "Failed to start headless task")
+          PushNotificationEventManager.sendEvent(
+                  PushNotificationEventType.BACKGROUND_MESSAGE_RECEIVED, payload.toWritableMap()
+          )
         }
       } catch (exception: Exception) {
-        Log.e(
-          TAG, "Something went wrong while starting headless task: ${exception.message}"
+        Log.e(TAG, "Something went wrong while starting headless task: ${exception.message}")
+        PushNotificationEventManager.sendEvent(
+                PushNotificationEventType.BACKGROUND_MESSAGE_RECEIVED, payload.toWritableMap()
         )
       }
     }

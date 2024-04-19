@@ -1,6 +1,5 @@
 package com.candlefinance.push
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.app.ActivityManager
 import android.app.NotificationChannel
@@ -8,55 +7,39 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Build
+import android.os.Parcelable
+import android.util.Log
 import androidx.annotation.ChecksSdkIntAtLeast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
-import com.google.android.gms.common.internal.ResourceUtils
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.OnLifecycleEvent
+import com.facebook.react.HeadlessJsTaskService
+import com.facebook.react.bridge.Arguments
+import com.facebook.react.bridge.WritableMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.Locale
-import android.os.Parcelable
-import androidx.core.app.ActivityCompat
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 import java.net.URL
 
 class PushNotificationsConstants {
   companion object {
-    const val PINPOINT_PREFIX = "pinpoint" // pinpoint
-    const val NOTIFICATION_PREFIX = "$PINPOINT_PREFIX.notification." // pinpoint.notification.
-    const val CAMPAIGN_PREFIX = "$PINPOINT_PREFIX.campaign." // pinpoint.campaign.
     const val OPENAPP = "openApp" // openApp
     const val URL = "url" // url
     const val DEEPLINK = "deeplink" // deeplink
     const val TITLE = "title" // title
-    const val MESSAGE = "message" // message
     const val IMAGEURL = "imageUrl" // imageUrl
-    const val JOURNEY = "journey" // journey
-    const val JOURNEY_ID = "journey_id" // journey_id
-    const val JOURNEY_ACTIVITY_ID = "journey_activity_id" // journey_activity_id
-    const val PINPOINT_OPENAPP = "$PINPOINT_PREFIX.$OPENAPP" // pinpoint.openApp
-    const val PINPOINT_URL = "$PINPOINT_PREFIX.$URL" // pinpoint.url
-    const val PINPOINT_DEEPLINK = "$PINPOINT_PREFIX.$DEEPLINK" // pinpoint.deeplink
-    const val PINPOINT_NOTIFICATION_TITLE = "$NOTIFICATION_PREFIX$TITLE" // pinpoint.notification.title
-    const val PINPOINT_NOTIFICATION_BODY = "${NOTIFICATION_PREFIX}body" // pinpoint.notification.body
-    const val PINPOINT_NOTIFICATION_IMAGEURL = "$NOTIFICATION_PREFIX$IMAGEURL" // pinpoint.notification.imageUrl
-    // pinpoint.notification.silentPush
-    const val PINPOINT_NOTIFICATION_SILENTPUSH = "${NOTIFICATION_PREFIX}silentPush"
-    const val CAMPAIGN_ID = "campaign_id" // campaign_id
-    const val CAMPAIGN_ACTIVITY_ID = "campaign_activity_id" // campaign_activity_id
-    const val PINPOINT_CAMPAIGN_CAMPAIGN_ID = "$CAMPAIGN_PREFIX$CAMPAIGN_ID" // pinpoint.campaign.campaign_id
-    // pinpoint.campaign.campaign_activity_id
-    const val PINPOINT_CAMPAIGN_CAMPAIGN_ACTIVITY_ID = "$CAMPAIGN_PREFIX$CAMPAIGN_ACTIVITY_ID"
-    const val DEFAULT_NOTIFICATION_CHANNEL_ID = "PINPOINT.NOTIFICATION" // PINPOINT.NOTIFICATION
-    const val DIRECT_CAMPAIGN_SEND = "_DIRECT" // _DIRECT
+    const val DEFAULT_NOTIFICATION_CHANNEL_ID = "default_notification_channel_id" // default_notification_channel_id
   }
 }
 
@@ -103,91 +86,97 @@ class PushNotificationsUtils(
     BitmapFactory.decodeStream(URL(url).openConnection().getInputStream())
   }
 
-  fun isAppInForeground(): Boolean {
-    // Gets a list of running processes.
-    val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-    val processes = am.runningAppProcesses
-
-    // On some versions of android the first item in the list is what runs in the foreground, but this is not true
-    // on all versions. Check the process importance to see if the app is in the foreground.
-    val packageName = context.applicationContext.packageName
-    for (appProcess in processes) {
-      val processName = appProcess.processName
-      if (ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND == appProcess.importance && packageName == processName) {
-        return true
-      }
-    }
-    return false
+  @SuppressLint("DiscouragedApi")
+  fun getResourceIdByName(name: String, type: String): Int {
+    return context.resources.getIdentifier(name, type, context.packageName)
   }
 
-  fun areNotificationsEnabled(): Boolean {
-    // check for app level opt out
-    return NotificationManagerCompat.from(context).areNotificationsEnabled()
-  }
-
-  @Suppress("DEPRECATION")
   @SuppressLint("NewApi")
   fun showNotification(
     notificationId: Int,
     payload: NotificationPayload,
     targetClass: Class<*>?
   ) {
+    Log.d("PushNotificationsUtils", "Show notification with payload: ${payload.rawData}")
     CoroutineScope(Dispatchers.IO).launch {
-//      val largeImageIcon = payload.imageUrl?.let { downloadImage(it) }
-      val notificationIntent = Intent(context, payload.targetClass ?: targetClass)
-      notificationIntent.putExtra("amplifyNotificationPayload", payload)
-      notificationIntent.putExtra("notificationId", notificationId)
-      val pendingIntent = PendingIntent.getActivity(
-        context,
-        notificationId,
-        notificationIntent,
-        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-      )
-      val notificationChannel = retrieveNotificationChannel()
-      val builder = if (isNotificationChannelSupported() && notificationChannel != null) {
-        NotificationCompat.Builder(context, payload.channelId ?: notificationChannel.id)
+      val notificationManager = ContextCompat.getSystemService(context, NotificationManager::class.java)
+      val notificationBuilder = NotificationCompat.Builder(context, channelId)
+      val notificationContent = payload.rawData
+
+      notificationBuilder
+              .setSmallIcon(getResourceIdByName("ic_default_notification", "drawable"))
+              .setContentTitle(notificationContent[PushNotificationsConstants.TITLE])
+              .setAutoCancel(true)
+              .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+
+      Log.d("PushNotificationsUtils", "targetClass: $targetClass")
+      if (targetClass != null) {
+        Log.d("PushNotificationsUtils", "targetClass is not null")
+        val intent = Intent(context, targetClass).apply {
+          flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+          putExtra(PushNotificationsConstants.OPENAPP, true)
+          putExtra(PushNotificationsConstants.URL, notificationContent[PushNotificationsConstants.URL])
+          putExtra(PushNotificationsConstants.DEEPLINK, notificationContent[PushNotificationsConstants.DEEPLINK])
+        }
+
+        notificationBuilder.setContentIntent(
+                PendingIntent.getActivity(
+                        context,
+                        notificationId,
+                        intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT
+                )
+        )
       } else {
-        NotificationCompat.Builder(context)
+        Log.e("PushNotificationsUtils", "targetClass is null")
       }
 
-      builder.apply {
-//        setContentTitle(payload.title)
-//        setContentText(payload.body)
-        setSmallIcon(R.drawable.ic_default_notification)
-        setContentIntent(pendingIntent)
-        setPriority(NotificationCompat.PRIORITY_DEFAULT)
-//        setLargeIcon(largeImageIcon)
-        setAutoCancel(true)
+      if (notificationContent.containsKey(PushNotificationsConstants.IMAGEURL)) {
+        val imageUrl = notificationContent[PushNotificationsConstants.IMAGEURL]
+        val bitmap = imageUrl?.let { downloadImage(it) }
+        if (bitmap != null) {
+          notificationBuilder.setLargeIcon(bitmap)
+        }
       }
 
-      with(NotificationManagerCompat.from(context)) {
-//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-//          // TODO: Consider calling
-//          //    ActivityCompat#requestPermissions
-//          // here to request the missing permissions, and then overriding
-//          //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-//          //                                          int[] grantResults)
-//          // to handle the case where the user grants the permission. See the documentation
-//          // for ActivityCompat#requestPermissions for more details.
-//        } else {
-//          notify(notificationId, builder.build())
-//        }
+      if (isNotificationChannelSupported()) {
+        notificationBuilder.setChannelId(channelId)
       }
+
+      notificationManager?.notify(notificationId, notificationBuilder.build())
     }
   }
 }
 
 class PushNotificationUtils(context: Context) {
     private val utils = PushNotificationsUtils(context)
+    private val lifecycleObserver = AppLifecycleListener()
+
+    init {
+        if (context is LifecycleOwner) {
+            Log.d("PushNotificationUtils", "Add lifecycle observer to context")
+            context.lifecycle.addObserver(lifecycleObserver)
+        } else {
+            Log.e("PushNotificationUtils", "Context is not a lifecycle owner")
+          ProcessLifecycleOwner.get().lifecycle.addObserver(lifecycleObserver)
+        }
+    }
 
     fun showNotification(
         payload: NotificationPayload
     ) {
-        // TODO:
+        Log.d("PushNotificationUtils", "Show notification with payload: $payload")
+
+        val notificationId = (System.currentTimeMillis() % Int.MAX_VALUE).toInt()
+        utils.showNotification(notificationId, payload, payload.targetClass)
     }
 
     fun isAppInForeground(): Boolean {
-        return utils.isAppInForeground()
+        return lifecycleObserver.isAppInForeground
+    }
+
+    fun isAppInBackground(): Boolean {
+        return lifecycleObserver.isAppInBackground
     }
 }
 
@@ -199,9 +188,9 @@ open class NotificationContentProvider internal constructor(open val content: Ma
 
 @Parcelize
 open class NotificationPayload(
-  val contentProvider: NotificationContentProvider,
-  val channelId: String? = null,
-  val targetClass: Class<*>? = null
+        private val contentProvider: NotificationContentProvider,
+        val channelId: String? = null,
+        val targetClass: Class<*>? = null
 ) : Parcelable {
 
   @IgnoredOnParcel
@@ -212,6 +201,12 @@ open class NotificationPayload(
   private fun extractRawData() = when (contentProvider) {
     is NotificationContentProvider.FCM -> contentProvider.content
     else -> mapOf()
+  }
+
+  fun toWritableMap(): WritableMap {
+    val map = Arguments.createMap()
+    rawData.forEach { (key, value) -> map.putString(key, value) }
+    return map
   }
 
   companion object {
@@ -225,7 +220,11 @@ open class NotificationPayload(
 
     @JvmStatic
     fun fromIntent(intent: Intent?): NotificationPayload? {
-      return intent?.getParcelableExtra("amplifyNotificationPayload")
+      return intent?.extras?.let {
+        val toMap: Map<String, String?> = it.keySet().associateWith { key -> it.get(key)?.toString() }
+        val contentProvider = NotificationContentProvider.FCM(toMap.filterValues { it != null } as Map<String, String>)
+        NotificationPayload(contentProvider)
+      }
     }
   }
 
@@ -244,6 +243,26 @@ open class NotificationPayload(
 }
 
 sealed interface PermissionRequestResult {
-  object Granted : PermissionRequestResult
+  data object Granted : PermissionRequestResult
   data class NotGranted(val shouldShowRationale: Boolean) : PermissionRequestResult
+}
+
+class AppLifecycleListener : DefaultLifecycleObserver {
+  var isAppInForeground: Boolean = false
+  var isAppInBackground: Boolean = false
+
+  override fun onStart(owner: LifecycleOwner) {
+    // App moved to foreground
+    println("App is in the foreground")
+
+    isAppInForeground = true
+    isAppInBackground = false
+  }
+
+  override fun onStop(owner: LifecycleOwner) {
+    // App moved to background
+    println("App is in the background")
+    isAppInBackground = true
+    isAppInForeground = false
+  }
 }

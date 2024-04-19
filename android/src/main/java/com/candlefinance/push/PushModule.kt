@@ -1,5 +1,6 @@
 package com.candlefinance.push
 
+import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
@@ -48,6 +49,7 @@ enum class PushNotificationPermissionStatus {
   Authorized,
   Denied,
 }
+
 class PushModule(
   reactContext: ReactApplicationContext,
   dispatcher: CoroutineDispatcher = Dispatchers.Main
@@ -97,10 +99,12 @@ class PushModule(
 
   @ReactMethod
   fun getPermissionStatus(promise: Promise) {
-    val permission = PushNotificationPermission(reactApplicationContext)
+    val permission = reactApplicationContext.currentActivity?.let { PushNotificationPermission(it) }
     // If permission has already been granted
-    if (permission.hasRequiredPermission) {
-      return promise.resolve(PushNotificationPermissionStatus.Authorized.name)
+    if (permission != null) {
+      if (permission.hasRequiredPermission) {
+        return promise.resolve(PushNotificationPermissionStatus.Authorized.name)
+      }
     }
     // If the shouldShowRequestPermissionRationale flag is true, permission must have been
     // denied once (and only once) previously
@@ -123,8 +127,8 @@ class PushModule(
     promise: Promise
   ) {
     scope.launch {
-      val permission = PushNotificationPermission(reactApplicationContext)
-      val result = permission.requestPermission()
+      val permission = reactApplicationContext.currentActivity?.let { PushNotificationPermission(it) }
+      val result = permission?.requestPermission()
       if (result is PermissionRequestResult.Granted) {
         promise.resolve(true)
       } else {
@@ -154,7 +158,7 @@ class PushModule(
   }
 
   override fun getConstants(): MutableMap<String, Any> = hashMapOf(
-    "NativeEvent" to PushNotificationEventType.values()
+    "NativeEvent" to PushNotificationEventType.entries
       .associateBy({ it.name }, { it.value }),
     "NativeHeadlessTaskKey" to PushNotificationHeadlessTaskService.HEADLESS_TASK_KEY
   )
@@ -169,9 +173,9 @@ class PushModule(
   override fun onNewIntent(intent: Intent) {
     val payload = NotificationPayload.fromIntent(intent)
     if (payload != null) {
-//      PushNotificationEventManager.sendEvent(
-//        PushNotificationEventType.NOTIFICATION_OPENED, payload.toWritableMap()
-//      )
+      PushNotificationEventManager.sendEvent(
+        PushNotificationEventType.NOTIFICATION_OPENED, payload.toWritableMap()
+      )
     }
   }
 
@@ -201,12 +205,12 @@ class PushModule(
       currentActivity?.intent?.let {
         val payload = NotificationPayload.fromIntent(it)
         if (payload != null) {
-//          launchNotification = payload.toWritableMap()
-//          // Launch notification opened event is emitted for internal use only
-//          PushNotificationEventManager.sendEvent(
-//            PushNotificationEventType.LAUNCH_NOTIFICATION_OPENED,
-//            payload.toWritableMap()
-//          )
+          launchNotification = payload.toWritableMap()
+          // Launch notification opened event is emitted for internal use only
+          PushNotificationEventManager.sendEvent(
+            PushNotificationEventType.LAUNCH_NOTIFICATION_OPENED,
+            payload.toWritableMap()
+          )
         }
       }
     } else {
@@ -257,16 +261,29 @@ class PushNotificationPermission(private val context: Context) {
     }
 
     val requestId = UUID.randomUUID().toString()
+    Log.d(TAG, "Requesting notification permission with requestId: $requestId")
+    // Check if the context is an instance of Activity
+    if (context is Activity) {
+      Log.d(TAG, "Requesting notification permission")
+      // Check if the version is Android 12 or higher
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        Log.d(TAG, "Requesting notification permission on Android 12 or higher")
+        // Request the permission
+        Log.d(TAG, "Requesting notification permission on Android 12 or higher")
+        ActivityCompat.requestPermissions(
+                context,
+                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                requestId.hashCode()
+        )
+        Log.d(TAG, "Requesting notification permission on Android 12 or higher")
+      }
 
-    // Start the activity
-    val intent = Intent(context, PermissionsRequestActivity::class.java).apply {
-      putExtra(PermissionRequestId, requestId)
+      // Listen for the result
+      return PermissionRequestChannel.listen(requestId).first()
+    } else {
+      Log.e(TAG, "Context is not an instance of Activity")
+      throw IllegalStateException("Context is not an instance of Activity")
     }
-    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-    context.startActivity(intent)
-
-    // Listen for the result
-    return PermissionRequestChannel.listen(requestId).first()
   }
 
   /**

@@ -1,5 +1,6 @@
 package com.candlefinance.push
 
+import android.util.Log
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.modules.core.DeviceEventManagerModule
@@ -8,7 +9,9 @@ enum class PushNotificationEventType(val value: String) {
   FOREGROUND_MESSAGE_RECEIVED("ForegroundMessageReceived"),
   LAUNCH_NOTIFICATION_OPENED("LaunchNotificationOpened"),
   NOTIFICATION_OPENED("NotificationOpened"),
-  TOKEN_RECEIVED("TokenReceived")
+  BACKGROUND_MESSAGE_RECEIVED("BackgroundMessageReceived"),
+  TOKEN_RECEIVED("TokenReceived"),
+  FAILED_TO_REGISTER("FailedToRegister")
 }
 
 class PushNotificationEvent(val type: PushNotificationEventType, val params: WritableMap?)
@@ -28,6 +31,7 @@ object PushNotificationEventManager {
     if (!isInitialized) {
       eventQueue.add(PushNotificationEvent(type, params))
     } else {
+      Log.d("PushNotificationEventManager", "Sending event: $type")
       sendJSEvent(type, params)
     }
   }
