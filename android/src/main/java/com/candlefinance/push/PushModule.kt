@@ -7,6 +7,8 @@ import android.content.Context.MODE_PRIVATE
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -57,7 +59,6 @@ class PushModule(
     const val NAME = "Push"
   }
 
-  private var isAppLaunch: Boolean = true
   private var launchNotification: WritableMap? = null
   private val sharedPreferences = reactContext.getSharedPreferences(PREF_FILE_KEY, MODE_PRIVATE)
   private val scope = CoroutineScope(dispatcher)
@@ -181,46 +182,27 @@ class PushModule(
    */
   override fun onHostResume() {
     Log.d(TAG, "App resumed")
-    if (isAppLaunch) {
-      isAppLaunch = false
-      PushNotificationEventManager.init(reactApplicationContext)
-      val firebaseInstance = FirebaseMessaging.getInstance()
-      firebaseInstance.token.addOnCompleteListener(OnCompleteListener { task ->
-        if (!task.isSuccessful) {
-          Log.w(TAG, "Fetching FCM registration token failed")
-          return@OnCompleteListener
-        }
-        val params = Arguments.createMap().apply {
-          putString("token", task.result)
-        }
-        Log.d(TAG, "Send device token event")
-        PushNotificationEventManager.sendEvent(
-          PushNotificationEventType.TOKEN_RECEIVED,
-          params
-        )
-      })
-      currentActivity?.intent?.let {
+    PushNotificationEventManager.init(reactApplicationContext)
+    currentActivity?.intent?.let {
         val payload = NotificationPayload.fromIntent(it)
         if (payload != null) {
+          Log.d(TAG, "Launch notification found in intent waiting 5 seconds")
           launchNotification = payload.toWritableMap()
-          // Launch notification opened event is emitted for internal use only
-          PushNotificationEventManager.sendEvent(
-            PushNotificationEventType.LAUNCH_NOTIFICATION_OPENED,
-            payload.toWritableMap()
-          )
+          Handler(Looper.getMainLooper()).postDelayed({
+            PushNotificationEventManager.sendEvent(
+                    PushNotificationEventType.LAUNCH_NOTIFICATION_OPENED,
+                    payload.toWritableMap()
+            )
+          }, 3000)
         } else {
           Log.d(TAG, "No launch notification found in intent")
         }
       }
-    } else {
-      // Wipe the launching notification as app was re-opened by some other means
-      Log.d(TAG, "Wipe launching notification")
-      launchNotification = null
-    }
   }
 
   override fun onHostPause() {
     // noop - only overridden as this class implements LifecycleEventListener
+    Log.d(TAG, "App paused")
   }
 
   override fun onHostDestroy() {

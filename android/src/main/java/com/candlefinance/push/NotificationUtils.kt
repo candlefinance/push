@@ -103,7 +103,7 @@ class PushNotificationsUtils(
       val notificationContent = payload.rawData
 
       notificationBuilder
-              .setSmallIcon(getResourceIdByName("ic_default_notification", "drawable"))
+              .setSmallIcon(getResourceIdByName("ic_default_notification_foreground", "drawable"))
               .setContentTitle(notificationContent[PushNotificationsConstants.TITLE])
               .setContentText(notificationContent[PushNotificationsConstants.BODY])
               .setSubText(notificationContent[PushNotificationsConstants.SUBTITLE])
@@ -128,6 +128,7 @@ class PushNotificationsUtils(
           putExtra(PushNotificationsConstants.OPENAPP, true)
           val json = JSONObject()
           notificationContent.forEach { (key, value) -> json.put(key, value) }
+          Log.d(Tag, "SAVE to intent rawData: $json")
           putExtra("rawData", json.toString())
         }
 
@@ -232,9 +233,22 @@ open class NotificationPayload(
 
   fun toWritableMap(): WritableMap {
     val map = Arguments.createMap()
-    map.putMap("rawData", Arguments.makeNativeMap(rawData))
+    if (rawData.containsKey("rawData")) {
+      val existingRawData = rawData["rawData"]?.let {
+        JSONObject(it)
+      }
+      val toMap = existingRawData?.let {
+        it.keys().asSequence().associateWith { key -> it.get(key).toString() }
+      }
+      toMap?.forEach { (key, value) -> map.putString(key, value) }
+      map.putMap("rawData", Arguments.makeNativeMap(toMap))
+      Log.d(Tag, "TO READABLE existing: $map")
+    } else {
+      map.putMap("rawData", Arguments.makeNativeMap(rawData))
+      rawData.forEach { (key, value) -> map.putString(key, value) }
+      Log.d(Tag, "TO READABLE new: $map")
+    }
     map.putString("channelId", channelId)
-    rawData.forEach { (key, value) -> map.putString(key, value) }
     return map
   }
 
@@ -252,6 +266,7 @@ open class NotificationPayload(
       return intent?.extras?.let {
         val toMap: Map<String, String?> = it.keySet().associateWith { key -> it.get(key)?.toString() }
         val contentProvider = NotificationContentProvider.FCM(toMap.filterValues { it != null } as Map<String, String>)
+        Log.d(Tag, "READING: Notification payload from intent: $toMap")
         NotificationPayload(contentProvider)
       }
     }
