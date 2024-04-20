@@ -1,7 +1,6 @@
 package com.candlefinance.push
 
 import android.content.Intent
-import android.os.Bundle
 import android.util.Log
 import com.facebook.react.HeadlessJsTaskService
 import com.facebook.react.bridge.Arguments
@@ -15,7 +14,7 @@ class PushNotificationHeadlessTaskService : HeadlessJsTaskService() {
   private val defaultTimeout: Long = 10000 // 10 seconds
  override fun getTaskConfig(intent: Intent): HeadlessJsTaskConfig? {
    return NotificationPayload.fromIntent(intent)?.let {
-     Log.d(TAG, "Starting headless task with payload: $it")
+     Log.d(TAG, "Starting headless task with payload: ${it.rawData}")
      HeadlessJsTaskConfig(
        HEADLESS_TASK_KEY,
         it.toWritableMap(),
@@ -80,7 +79,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         payload.rawData.forEach { (key, value) ->
           json.put(key, value)
         }
-        serviceIntent.putExtra("data", json.toString())
+        serviceIntent.putExtra("NotificationPayload", json.toString())
         if (baseContext.startService(serviceIntent) != null) {
           HeadlessJsTaskService.acquireWakeLockNow(baseContext)
         } else {

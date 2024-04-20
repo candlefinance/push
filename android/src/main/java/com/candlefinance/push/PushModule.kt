@@ -6,9 +6,7 @@ import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
-import android.provider.Settings
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -172,6 +170,8 @@ class PushModule(
       PushNotificationEventManager.sendEvent(
         PushNotificationEventType.NOTIFICATION_OPENED, payload.toWritableMap()
       )
+    } else {
+      Log.d(TAG, "No notification payload found in intent")
     }
   }
 
@@ -208,6 +208,8 @@ class PushModule(
             PushNotificationEventType.LAUNCH_NOTIFICATION_OPENED,
             payload.toWritableMap()
           )
+        } else {
+          Log.d(TAG, "No launch notification found in intent")
         }
       }
     } else {

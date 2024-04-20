@@ -1,7 +1,6 @@
 package com.candlefinance.push
 
 import android.annotation.SuppressLint
-import android.app.ActivityManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -14,15 +13,10 @@ import android.os.Parcelable
 import android.util.Log
 import androidx.annotation.ChecksSdkIntAtLeast
 import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.OnLifecycleEvent
 import androidx.lifecycle.ProcessLifecycleOwner
-import com.facebook.react.HeadlessJsTaskService
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.WritableMap
 import kotlinx.coroutines.CoroutineScope
@@ -31,6 +25,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
+import org.json.JSONObject
 import java.net.URL
 
 class PushNotificationsConstants {
@@ -41,6 +36,7 @@ class PushNotificationsConstants {
     const val TITLE = "title" // title
     const val BODY = "body" // body
     const val SUBTITLE = "subtitle" // subtitle
+    const val PRIORITY = "priority" // priority
     const val IMAGEURL = "imageUrl" // imageUrl
     const val DEFAULT_NOTIFICATION_CHANNEL_ID = "default_notification_channel_id" // default_notification_channel_id
   }
@@ -100,7 +96,7 @@ class PushNotificationsUtils(
     payload: NotificationPayload,
     targetClass: Class<*>?
   ) {
-    Log.d("PushNotificationsUtils", "Show notification with payload: ${payload.rawData}")
+    Log.d(Tag, "Show notification with payload: ${payload.rawData}")
     CoroutineScope(Dispatchers.IO).launch {
       val notificationManager = ContextCompat.getSystemService(context, NotificationManager::class.java)
       val notificationBuilder = NotificationCompat.Builder(context, channelId)
@@ -110,12 +106,13 @@ class PushNotificationsUtils(
               .setSmallIcon(getResourceIdByName("ic_default_notification", "drawable"))
               .setContentTitle(notificationContent[PushNotificationsConstants.TITLE])
               .setContentText(notificationContent[PushNotificationsConstants.BODY])
-              .setPriority(NotificationCompat.PRIORITY_HIGH)
+              .setSubText(notificationContent[PushNotificationsConstants.SUBTITLE])
+              .setPriority(notificationContent[PushNotificationsConstants.PRIORITY]?.toInt() ?: NotificationCompat.PRIORITY_DEFAULT)
               .setAutoCancel(true)
 
-      Log.d("PushNotificationsUtils", "targetClass: $targetClass")
+      Log.d(Tag, "targetClass: $targetClass")
       if (targetClass != null) {
-        Log.d("PushNotificationsUtils", "targetClass is not null")
+        Log.d(Tag, "targetClass is not null")
         val intent = Intent(context, targetClass).apply {
           flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
           val url = notificationContent[PushNotificationsConstants.URL]
@@ -129,6 +126,9 @@ class PushNotificationsUtils(
             putExtra(PushNotificationsConstants.DEEPLINK, deepLink)
           }
           putExtra(PushNotificationsConstants.OPENAPP, true)
+          val json = JSONObject()
+          notificationContent.forEach { (key, value) -> json.put(key, value) }
+          putExtra("rawData", json.toString())
         }
 
         notificationBuilder.setContentIntent(
@@ -136,11 +136,11 @@ class PushNotificationsUtils(
                         context,
                         notificationId,
                         intent,
-                        PendingIntent.FLAG_UPDATE_CURRENT
+                  PendingIntent.FLAG_UPDATE_CURRENT or if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_IMMUTABLE else 0
                 )
         )
       } else {
-        Log.e("PushNotificationsUtils", "targetClass is null")
+        Log.e(Tag, "targetClass is null")
       }
 
       if (notificationContent.containsKey(PushNotificationsConstants.IMAGEURL)) {
@@ -160,16 +160,18 @@ class PushNotificationsUtils(
   }
 }
 
+private const val Tag = "PushNotificationUtils"
+
 class PushNotificationUtils(context: Context) {
     private val utils = PushNotificationsUtils(context)
     private val lifecycleObserver = AppLifecycleListener()
 
     init {
         if (context is LifecycleOwner) {
-            Log.d("PushNotificationUtils", "Add lifecycle observer to context")
+            Log.d(Tag, "Add lifecycle observer to context")
             context.lifecycle.addObserver(lifecycleObserver)
         } else {
-            Log.e("PushNotificationUtils", "Context is not a lifecycle owner")
+            Log.e(Tag, "Context is not a lifecycle owner")
           ProcessLifecycleOwner.get().lifecycle.addObserver(lifecycleObserver)
         }
     }
@@ -177,20 +179,22 @@ class PushNotificationUtils(context: Context) {
     fun showNotification(
         payload: NotificationPayload
     ) {
-        Log.d("PushNotificationUtils", "Show notification with payload: $payload")
+        Log.d(Tag, "Show notification with payload: $payload")
 
         val notificationId = (System.currentTimeMillis() % Int.MAX_VALUE).toInt()
         val targetClass = payload.rawData["targetClass"]?.let {
-          Log.d("PushNotificationUtils", "targetClass: $it")
+          Log.d(Tag, "targetClass: $it")
           try {
             Class.forName(it)
           } catch (e: ClassNotFoundException) {
-            Log.e("PushNotificationUtils", "Class not found: $it")
+            Log.e(Tag, "Class not found: $it")
             null
           }
         }
         if (targetClass != null) {
           utils.showNotification(notificationId, payload, targetClass)
+        } else {
+          Log.e(Tag, "targetClass is null")
         }
     }
 
