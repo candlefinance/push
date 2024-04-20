@@ -8,12 +8,8 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
-import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
-import androidx.activity.ComponentActivity
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.facebook.react.bridge.ActivityEventListener
@@ -236,7 +232,6 @@ class PushModule(
 
 internal const val PermissionRequiredApiLevel = 33
 internal const val PermissionName = "android.permission.POST_NOTIFICATIONS"
-internal const val PermissionRequestId = "com.push.permissions.requestId"
 
 class PushNotificationPermission(private val context: Context) {
 
@@ -287,16 +282,6 @@ class PushNotificationPermission(private val context: Context) {
       throw IllegalStateException("Context is not an instance of Activity")
     }
   }
-
-  /**
-   * Opens the application's settings page, where the user can manually grant/revoke application permissions
-   */
-  fun openSettings() {
-    // Build a uri like "package:com.example.myapplication". See docs for ACTION_APPLICATION_DETAILS_SETTINGS.
-    val uri = Uri.fromParts("package", context.packageName, null)
-    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, uri)
-    context.startActivity(intent)
-  }
 }
 
 internal object PermissionRequestChannel {
@@ -316,39 +301,4 @@ internal object PermissionRequestChannel {
    * Send the result of a permission request
    */
   fun send(requestId: String, result: PermissionRequestResult) = flow.tryEmit(IdAndResult(requestId, result))
-}
-
-class PermissionsRequestActivity : ComponentActivity() {
-
-  @RequiresApi(Build.VERSION_CODES.M)
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-
-    val requestId = intent.extras?.getString(PermissionRequestId)
-    if (requestId != null) {
-      launchPermissionRequest(requestId)
-    } else {
-      finishWithNoAnimation()
-    }
-  }
-
-  @RequiresApi(Build.VERSION_CODES.M)
-  private fun launchPermissionRequest(requestId: String) {
-    val launcher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-      val result = if (granted) {
-        PermissionRequestResult.Granted
-      } else {
-        PermissionRequestResult.NotGranted(shouldShowRequestPermissionRationale(PermissionName))
-      }
-      PermissionRequestChannel.send(requestId, result)
-      finishWithNoAnimation()
-    }
-
-    launcher.launch(PermissionName)
-  }
-
-  private fun finishWithNoAnimation() {
-    finish()
-    overridePendingTransition(0, 0)
-  }
 }

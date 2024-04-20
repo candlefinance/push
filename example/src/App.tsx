@@ -1,8 +1,8 @@
 import * as React from 'react';
 
-import { StyleSheet, View, Text, Button, Platform } from 'react-native';
 import type { PushNotificationPermissionStatus } from '@candlefinance/push';
 import { module as Push } from '@candlefinance/push';
+import { Button, StyleSheet, Text, View } from 'react-native';
 
 Push.registerHeadlessTask(async (message) => {
   console.log('Headless Task', message);

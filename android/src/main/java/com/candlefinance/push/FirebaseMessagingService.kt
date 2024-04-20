@@ -7,6 +7,7 @@ import com.facebook.react.HeadlessJsTaskService
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.jstasks.HeadlessJsTaskConfig
 import com.google.firebase.messaging.FirebaseMessagingService
+import org.json.JSONObject
 
 private val TAG = PushModule::class.java.simpleName
 class PushNotificationHeadlessTaskService : HeadlessJsTaskService() {
@@ -74,14 +75,16 @@ class FirebaseMessagingService : FirebaseMessagingService() {
 
       try {
         val serviceIntent = Intent(baseContext, PushNotificationHeadlessTaskService::class.java)
-        serviceIntent.putExtra("NotificationPayload", payload)
+        val json = JSONObject()
+        json.put("rawData", payload.rawData)
+        payload.rawData.forEach { (key, value) ->
+          json.put(key, value)
+        }
+        serviceIntent.putExtra("data", json.toString())
         if (baseContext.startService(serviceIntent) != null) {
           HeadlessJsTaskService.acquireWakeLockNow(baseContext)
         } else {
           Log.e(TAG, "Failed to start headless task")
-          PushNotificationEventManager.sendEvent(
-                  PushNotificationEventType.BACKGROUND_MESSAGE_RECEIVED, payload.toWritableMap()
-          )
         }
       } catch (exception: Exception) {
         Log.e(TAG, "Something went wrong while starting headless task: ${exception.message}")

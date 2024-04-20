@@ -40,6 +40,7 @@ class PushNotificationsConstants {
     const val DEEPLINK = "deeplink" // deeplink
     const val TITLE = "title" // title
     const val BODY = "body" // body
+    const val SUBTITLE = "subtitle" // subtitle
     const val IMAGEURL = "imageUrl" // imageUrl
     const val DEFAULT_NOTIFICATION_CHANNEL_ID = "default_notification_channel_id" // default_notification_channel_id
   }
@@ -109,8 +110,8 @@ class PushNotificationsUtils(
               .setSmallIcon(getResourceIdByName("ic_default_notification", "drawable"))
               .setContentTitle(notificationContent[PushNotificationsConstants.TITLE])
               .setContentText(notificationContent[PushNotificationsConstants.BODY])
+              .setPriority(NotificationCompat.PRIORITY_HIGH)
               .setAutoCancel(true)
-              .setPriority(NotificationCompat.PRIORITY_DEFAULT)
 
       Log.d("PushNotificationsUtils", "targetClass: $targetClass")
       if (targetClass != null) {
